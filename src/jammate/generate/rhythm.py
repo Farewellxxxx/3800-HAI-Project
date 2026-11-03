@@ -41,16 +41,17 @@ def rhythmic_hits(context: RhythmContext, mode: RhythmMode,
     return tuple(sorted(hits))
 
 
-def rhythm_parts(chord: Chord, context: RhythmContext, mode: RhythmMode,
+def rhythm_parts(chord: Chord | None, context: RhythmContext, mode: RhythmMode,
                  energy: int, bar_index: int) -> tuple[Note, ...]:
     """Generate a coordinated bar. Energy zero remains the existing pad break."""
     if energy <= 0:
-        return tuple(Note(p, 0, BEATS_PER_BAR, 45, "keys") for p in chord.voicing(COMP_LOW))
+        return tuple(Note(p, 0, BEATS_PER_BAR, 45, "keys") for p in chord.voicing(COMP_LOW)) if chord else ()
     hits = rhythmic_hits(context, mode, bar_index, energy)
     if not hits:
         return ()
-    root, _, fifth = chord.voicing(BASS_LOW)
-    voicing = chord.voicing(COMP_LOW)
+    if chord:
+        root, _, fifth = chord.voicing(BASS_LOW)
+        voicing = chord.voicing(COMP_LOW)
     notes: list[Note] = []
     for i, (beat, accent) in enumerate(hits):
         next_beat = hits[i + 1][0] if i + 1 < len(hits) else float(BEATS_PER_BAR)
@@ -59,6 +60,7 @@ def rhythm_parts(chord: Chord, context: RhythmContext, mode: RhythmMode,
         drum = KICK if i % 2 == 0 else SNARE
         notes.append(Note(drum, beat, min(0.125, duration), velocity, "drums"))
         notes.append(Note(CLOSED_HAT, beat, min(0.125, duration), max(1, velocity - 25), "drums"))
-        notes.append(Note(root if i % 2 == 0 else fifth, beat, duration, velocity, "bass"))
-        notes.extend(Note(p, beat, min(duration, 0.5), max(1, velocity - 25), "keys") for p in voicing)
+        if chord:
+            notes.append(Note(root if i % 2 == 0 else fifth, beat, duration, velocity, "bass"))
+            notes.extend(Note(p, beat, min(duration, 0.5), max(1, velocity - 25), "keys") for p in voicing)
     return tuple(sorted(notes, key=lambda n: (n.start, n.instrument, n.pitch)))

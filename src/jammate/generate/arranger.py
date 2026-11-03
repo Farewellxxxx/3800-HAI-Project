@@ -22,14 +22,16 @@ def arrange_bar(state: JamState, bar_index: int, lead: tuple[Note, ...] = ()) ->
     """All parts for one bar in absolute beats. `lead` is bar-relative."""
     if not state.playing:
         return ()
-    chord = chord_for_bar(state, bar_index)
+    chord = chord_for_bar(state, bar_index) if state.key is not None else None
     phrase_pos = bar_index % PHRASE_BARS
     if state.rhythm is not None:
         backing = rhythm_parts(chord, state.rhythm, state.rhythm_mode, state.energy, bar_index)
-    else:
+    elif chord is not None:
         backing = (drum_bar(state.energy, phrase_pos)
                    + bass_bar(chord, state.energy)
                    + comp_bar(chord, state.energy))
+    else:
+        backing = drum_bar(state.energy, phrase_pos)
     bar_notes = backing + tuple(lead)
     offset = bar_index * BEATS_PER_BAR
     return tuple(n.shifted(offset) for n in bar_notes)

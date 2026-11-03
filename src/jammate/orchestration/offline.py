@@ -68,7 +68,9 @@ def prepare_plan(state: JamState, plan: BandPlan, *, seed=3800) -> PlannedPerfor
     if start != state.position.next_bar:
         raise PlanError("offline executor requires the next unrendered bar; cannot skip intervening bars")
     lead, generated = (), None
-    if target.playing and target.key is None:
+    needs_harmony = any(target.layer(name).active and target.layer(name).level > 0 and target.layer(name).density > 0 for name in ("bass", "keys"))
+    needs_harmony |= any(a["action"] in {"VARY_MOTIF", "INTRODUCE_MOTIF"} for a in data["actions"])
+    if target.playing and target.key is None and needs_harmony:
         raise PlanError("baseline accompaniment needs an explicitly configured session key")
     rng = random.Random(int.from_bytes(hashlib.sha256(f"{seed}:{plan.plan_id}".encode()).digest()[:8], "big"))
     for action in data["actions"]:
@@ -103,7 +105,7 @@ def prepare_plan(state: JamState, plan: BandPlan, *, seed=3800) -> PlannedPerfor
         # Explicit start/stop governs audibility globally. Compare preserved
         # arrangements under that same transport control, including a restart.
         reference = state.with_updates(playing=target.playing)
-        baseline = _layers(arrange_bar(reference, bar), reference, bar=bar) if reference.playing and reference.key is not None else ()
+        baseline = _layers(arrange_bar(reference, bar), reference, bar=bar) if reference.playing else ()
         for preserved in data["preserve"]:
             if preserved.startswith("layer:"):
                 instrument = preserved[6:]

@@ -110,6 +110,8 @@ class RuleAgent:
             reasons.append(original)
             if command == "keep":
                 actions.append(_action("PRESERVE", scope))
+                if scope != "band":
+                    preserve.append(f"layer:{scope}")
             elif command in {"tempo", "groove"}:
                 preserve.append(command)
             elif command == "start":

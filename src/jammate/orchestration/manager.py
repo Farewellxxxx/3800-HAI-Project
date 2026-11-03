@@ -92,9 +92,12 @@ class StateManager:
                                 "plans": plans})
             return self._state, history
 
-    def ingest(self, events) -> tuple[InputEvent, ...]:
+    def ingest(self, events, *, placements=None) -> tuple[InputEvent, ...]:
         """One explicit related batch. Does not guess grouping from arrival time."""
         events = tuple(events)
+        placements = placements or {}
+        if set(placements) - {e.event_id for e in events if e.event_type == "musical_phrase"}:
+            raise ValueError("placement must reference a musical phrase in this batch")
         with self._lock:
             proposed = {}
             for event in events:
@@ -120,7 +123,7 @@ class StateManager:
                 if event.event_type == "speech":
                     state = state.with_updates(interaction=replace(state.interaction, last_feedback=event.payload["text"]))
                 elif event.event_type == "musical_phrase":
-                    phrase = to_legacy_phrase(event, tempo_bpm=state.tempo_bpm)
+                    phrase = to_legacy_phrase(event, tempo_bpm=state.tempo_bpm, **placements.get(event.event_id, {}))
                     if phrase.notes:
                         motif = Motif(f"motif_{event.event_id}", "user", (event.event_id,), phrase.notes)
                         state = state.with_updates(motifs=state.motifs + (motif,), last_user_motif=phrase.notes)

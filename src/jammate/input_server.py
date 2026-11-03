@@ -15,7 +15,8 @@ import soundfile as sf
 from jammate.input_event import perceive_rhythm, validate_event
 from jammate.contracts import InputEvent
 from jammate.contracts.adapters import from_rhythm
-from jammate.input_band import render_clip
+from jammate.input_band import render_clip, SessionStore
+from jammate.web_session import SessionConflict
 from jammate.rhythm import RhythmContext
 
 ROOT = Path(__file__).resolve().parents[2] / "web"
@@ -36,7 +37,25 @@ class Handler(SimpleHTTPRequestHandler):
             length = int(self.headers.get("Content-Length", "0"))
             if not 0 < length <= 16 * 1024 * 1024:
                 raise ValueError("request must be 1 byte to 16 MB")
-            if self.path in ("/api/rhythm", "/api/rhythm/v1"):
+            if self.path.startswith('/api/session/'):
+                body = json.loads(self.rfile.read(length))
+                if not isinstance(body, dict):
+                    raise ValueError('请求必须为 JSON 对象。')
+                sessions = self.server.sessions
+                if self.path == '/api/session/create':
+                    result = sessions.create()
+                elif self.path == '/api/session/draft':
+                    result = sessions.update(body['session_id'], body['revision'], body['draft'])
+                elif self.path == '/api/session/render':
+                    result = sessions.render(body['session_id'], body['revision'], body['request_id'], text=body.get('text',''))
+                elif self.path == '/api/session/close':
+                    sessions.close(body['session_id'])
+                    result = {'closed': True}
+                else:
+                    self.json_response(404, {'error': 'unknown session endpoint'})
+                    return
+                self.json_response(200, result)
+            elif self.path in ("/api/rhythm", "/api/rhythm/v1"):
                 body = json.loads(self.rfile.read(length))
                 audio, sr = sf.read(io.BytesIO(base64.b64decode(body["wav"], validate=True)), dtype="float32", always_2d=True)
                 if len(audio)/sr > 30 or sr < 8000 or sr > 96000:
@@ -64,6 +83,8 @@ class Handler(SimpleHTTPRequestHandler):
                     fluidsynth=self.server.fluidsynth, soundfont=self.server.soundfont))
             else:
                 self.json_response(404, {"error": "unknown endpoint"})
+        except SessionConflict as exc:
+            self.json_response(409, {"error": str(exc)})
         except (ValueError, KeyError, TypeError, RuntimeError, OSError, subprocess.SubprocessError) as exc:
             self.json_response(400, {"error": str(exc)})
 
@@ -83,6 +104,7 @@ def main():
         parser.error("a SoundFont requires FluidSynth")
     with ThreadingHTTPServer(("127.0.0.1", args.port), partial(Handler, directory=str(ROOT))) as server:
         server.fluidsynth, server.soundfont = args.fluidsynth, args.soundfont
+        server.sessions = SessionStore(fluidsynth=args.fluidsynth, soundfont=args.soundfont)
         print(f"JamMate Input Lab: http://127.0.0.1:{args.port}", flush=True)
         server.serve_forever()
 

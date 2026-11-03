@@ -38,6 +38,11 @@ def render_clip(document, *, fluidsynth=None, soundfont=None):
     if plan.to_dict()["strategy"] != "RESPOND":
         raise ValueError("乐队无法用这段输入生成回应，请尝试更短的乐句或更清晰的节奏。")
     manager.stage(plan)
+    return {"event_id": event.event_id, **execute_render(manager, plan, fluidsynth=fluidsynth, soundfont=soundfont)}
+
+
+def execute_render(manager, plan, *, fluidsynth=None, soundfont=None):
+    """Execute a staged plan and export the same performance on a local timeline."""
     if fluidsynth is not None:
         from renderer_experiments.app.band_plan import KevinRuntime
 
@@ -52,12 +57,15 @@ def render_clip(document, *, fluidsynth=None, soundfont=None):
         result = OfflineRuntime().execute(manager, plan)
         wav_buffer, midi_buffer = io.BytesIO(), io.BytesIO()
         sf.write(wav_buffer, result.audio, result.sample_rate, format="WAV", subtype="PCM_16")
-        to_pretty_midi(result.notes, result.tempo_bpm).write(midi_buffer)
+        to_pretty_midi(tuple(n.shifted(-result.start_bar * 4) for n in result.notes), result.tempo_bpm).write(midi_buffer)
         wav, midi = wav_buffer.getvalue(), midi_buffer.getvalue()
         renderer, warnings = "JamMate / NumPy", []
     return {
-        "event_id": event.event_id, "plan": plan.to_dict(), "bars": result.bars,
+        "plan": plan.to_dict(), "bars": result.bars,
         "tempo_bpm": result.tempo_bpm, "renderer": renderer, "agent": "rule",
         "warnings": warnings, "manager_diagnostics": manager.diagnostics(),
         "wav": base64.b64encode(wav).decode("ascii"), "midi": base64.b64encode(midi).decode("ascii"),
     }
+
+
+from jammate.web_session import SessionStore  # public web service alongside render_clip

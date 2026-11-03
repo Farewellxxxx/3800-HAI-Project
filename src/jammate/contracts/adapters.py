@@ -127,7 +127,7 @@ def from_system(command: str, *, session_id: str, event_id: str | None = None,
                        "provenance": {"producer": "runtime"}})
 
 
-def to_legacy_phrase(event: InputEvent, *, tempo_bpm: float, beat_origin_s: float = 0.0):
+def to_legacy_phrase(event: InputEvent, *, tempo_bpm: float, beat_origin_s: float = 0.0, placement_beats: float = 0.0):
     """Seconds -> local beats, preserving rests, overlaps and selected pitches.
 
     Callers explicitly supply a constant session tempo and beat zero in the
@@ -143,11 +143,13 @@ def to_legacy_phrase(event: InputEvent, *, tempo_bpm: float, beat_origin_s: floa
         raise InputEventError("tempo_bpm: provide an explicit session tempo within 60-180")
     if isinstance(beat_origin_s, bool) or not isinstance(beat_origin_s, (int, float)) or not math.isfinite(beat_origin_s) or beat_origin_s < 0:
         raise InputEventError("beat_origin_s: expected a finite nonnegative recording time")
+    if isinstance(placement_beats, bool) or not isinstance(placement_beats, (int, float)) or not math.isfinite(placement_beats) or not 0 <= placement_beats <= 64:
+        raise InputEventError("placement_beats: expected a finite value within 0-64")
     notes = []
     for note in event.payload["melody"]["notes"]:
         start = (note["startSec"] - beat_origin_s) * tempo_bpm / 60
         if start < 0:
             raise InputEventError("beat_origin_s: would create a negative note start; no notes were dropped")
-        notes.append(Note(int(note["pitchMidi"]), start, note["durationSec"] * tempo_bpm / 60,
+        notes.append(Note(int(note["pitchMidi"]), start + placement_beats, note["durationSec"] * tempo_bpm / 60,
                           max(1, round(note["velocity01"] * 127)), "user"))
     return UserPhrase(tuple(notes))
