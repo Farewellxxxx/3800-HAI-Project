@@ -26,6 +26,19 @@ class SessionConflict(ValueError):
     pass
 
 
+def replay_revision(receipt, *, fluidsynth=None, soundfont=None):
+    """Reproduce a downloaded revision, including its prior layer adjustments."""
+    previous = JamState.from_dict(receipt['state_before'])
+    draft, _ = validate_draft({'inputs': receipt['inputs'], 'settings': receipt['settings']})
+    sid, request_id = receipt['session_id'], receipt['request_id']
+    if previous.session_id != sid:
+        raise ValueError('保存记录中的会话不一致。')
+    manager, plan, _ = SessionStore._prepare(sid, request_id, previous, draft, receipt.get('text', ''))
+    from jammate.input_band import execute_render
+    result = execute_render(manager, plan, fluidsynth=fluidsynth, soundfont=soundfont)
+    return {**receipt, **result, 'state': manager.state.to_dict()}
+
+
 def number(value, name, low, high):
     if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or not low <= value <= high:
         raise ValueError(f"{name} 必须为 {low}–{high} 之间的有效数字。")
@@ -80,7 +93,7 @@ def validate_draft(draft):
         if estimate:
             suggestion = {'key': {'tonic': estimate.key.tonic, 'mode': estimate.key.mode},
                           'score': estimate.score, 'margin': estimate.margin,
-                          'ambiguous': estimate.score < .7 or estimate.margin < .1,
+                          'ambiguous': len(phrase.notes) < 8 or sum(n.duration for n in phrase.notes) * 60 / bpm < 4 or estimate.score < .7 or estimate.margin < .1,
                           'meaning': '启发式候选，非正确概率；需手动确认，不自动应用。'}
     normalized = {'inputs': {k: e.to_dict() for k, e in events.items()},
                   'settings': {**deepcopy(settings), 'bpm': bpm, 'melody_origin_s': origin, 'placement_beats': placement}}
@@ -131,10 +144,15 @@ class SessionStore:
     def update(self, sid, revision, draft):
         if type(revision) is not int or revision < 1:
             raise ValueError('无效的草稿版本。')
-        data, suggestion = validate_draft(draft)
         with self._lock:
             session = self._get(sid)
-            if revision < session.revision or (revision == session.revision and data != session.draft):
+            if revision < session.revision:
+                raise SessionConflict('草稿已被较新的修改替代。')
+            if revision > session.revision:
+                # Even a temporarily invalid edit cancels work on an older draft.
+                session.revision, session.draft = revision, None
+            data, suggestion = validate_draft(draft)
+            if session.draft is not None and data != session.draft:
                 raise SessionConflict('草稿已被较新的修改替代。')
             session.revision, session.draft = revision, data
             return {'session_id': sid, 'revision': revision, 'settings': data['settings'], 'key_suggestion': suggestion}
@@ -165,7 +183,7 @@ class SessionStore:
             from jammate.input_band import execute_render
             output = execute_render(manager, plan, fluidsynth=self.fluidsynth, soundfont=self.soundfont)
             result = {**output, 'session_id': sid, 'revision': revision, 'request_id': request_id,
-                      'state': manager.state.to_dict(), 'settings': data['settings'],
+                      'state': manager.state.to_dict(), 'state_before': previous.to_dict(), 'settings': data['settings'],
                       'inputs': data['inputs'], 'events': [e.to_dict() for e in events],
                       'text': text, 'timeline': 'revision_of_same_passage_from_bar_zero'}
             with self._lock:

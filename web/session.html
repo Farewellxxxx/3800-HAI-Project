@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>JamMate · 一起做一段音乐</title><link rel="stylesheet" href="lab.css"><link rel="stylesheet" href="session.css"></head>
+<body><main>
+<nav><a href="/">← 工作台</a><span>本机运行 · 规则指挥</span></nav>
+<header><div><p class="eyebrow">JAMMATE / SESSION</p><h1>给节奏一条旋律，<br>再一起调整。</h1></div><button id="new-session" type="button">新建会话</button></header>
+<p id="session-state" role="status" data-ready="false">正在创建会话…</p>
+<p class="muted">每次生成都是同一段音乐的新版本。录音保留在下方输入页；关闭或刷新前请下载原录音与想保留的结果。</p>
+<section class="panel"><h2>1. 准备素材</h2><p>在输入页完成识别，点击「加入当前会话」。可以只用一种输入，也可以把两种组合起来。</p>
+<div class="materials"><div><strong>节拍</strong><p id="rhythm-summary" data-loaded="false">尚未加入</p><button data-remove="rhythm" type="button" class="secondary">移除节拍</button></div><div><strong>哼唱</strong><p id="humming-summary" data-loaded="false">尚未加入</p><button data-remove="humming" type="button" class="secondary">移除哼唱</button></div></div>
+<div class="tabs" role="group" aria-label="选择输入页"><button data-tab="rhythm" aria-pressed="true">拍一段节奏</button><button data-tab="humming" aria-pressed="false">哼一条旋律</button></div>
+<div id="rhythm-pane"><iframe id="rhythm-frame" src="rhythm.html?sessionInput=1" title="节拍录音与识别" allow="microphone"></iframe></div>
+<div id="humming-pane" hidden><iframe id="humming-frame" src="optimized/dist/?sessionInput=1" title="哼唱录音与识别" allow="microphone"></iframe></div>
+</section>
+<section class="panel"><h2>2. 确认音乐设置</h2><form id="settings" novalidate>
+<div class="settings-grid"><label>伴奏速度来源<select id="tempo-source"><option value="default">默认 100 BPM</option><option value="rhythm">使用已加入的节拍速度</option><option value="manual">手动指定 BPM</option></select></label><label>伴奏 BPM<input id="bpm" type="number" min="60" max="180" step="any" value="100" required disabled></label>
+<label>调性<select id="key"><option value="unknown">尚未确定：旋律 + 鼓点</option></select></label></div>
+<p id="key-help" class="muted">调性未确定时，贝斯与和弦暂停；选择调性后启用。不会修改你的旋律音高。</p>
+<p id="key-suggestion" class="muted">加入哼唱后可查看调性候选。</p><button id="apply-key" type="button" class="secondary" disabled>采用这个候选</button>
+<fieldset><legend>两段录音怎样对齐</legend><p>节拍的正式小节从会话第 0 拍开始。下面设置哼唱录音的第 0 拍，并决定把它放到会话的哪一拍；音符间隔和时长保持原样。</p>
+<div class="settings-grid"><label>哼唱录音第 0 拍（秒）<input id="melody-origin" type="number" min="0" max="30" step="any" value="0" required></label><label>放到会话第几拍（从 0 计）<input id="placement" type="number" min="0" max="64" step="any" value="0" required></label></div>
+<p id="alignment-description" class="muted"></p><label class="check"><input id="alignment-confirmed" type="checkbox">我确认以上对齐方式（组合两段录音时必选）</label>
+</fieldset></form><p id="draft-status" role="status"></p>
+</section>
+<section class="panel"><h2>3. 生成，再调整</h2><button id="render" type="button" disabled>生成当前版本</button><button id="retry" type="button" class="secondary" hidden>重试上次操作</button>
+<p class="muted">每次调整沿用上次成功的声部设置。修改素材或音乐设置后，请先生成当前版本。</p>
+<div id="commands"><button data-command="鼓更有力" disabled>鼓更有力</button><button data-command="简化" disabled>伴奏简单一点</button><button data-command="去掉贝斯" disabled>关闭贝斯</button><button data-command="加上贝斯" disabled>恢复贝斯</button></div>
+<label for="text-command">文字指挥（本地规则）</label><div class="text-row"><input id="text-command" maxlength="500" placeholder="例如：鼓更有力，速度不变"><button id="send-command" disabled>执行并生成</button></div>
+<p class="muted">支持上面的声部操作及“保持”“速度不变”；组合要求用逗号分开。不支持的表达会说明原因。BPM 和调性请在设置中修改。</p>
+<p id="status" role="status" aria-live="polite"></p><p id="layers" class="muted"></p>
+<div id="outputs"></div><p class="muted">保留最近两版。WAV 是实际声音，MIDI 可分轨编辑，记录 JSON 包含原输入、对齐设置、执行计划和状态。会话保存在本机服务内存中，重启服务后需重新加入素材。</p>
+</section>
+</main><script type="module" src="session.js"></script></body></html>

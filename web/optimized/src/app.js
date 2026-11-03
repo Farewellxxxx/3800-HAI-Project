@@ -214,12 +214,13 @@ async function toggleRecording() {
       if (seconds >= MAX_RECORD_SECONDS) stopRecording();
     },100);
   } catch (error) {
+    if (epoch !== captureEpoch) return;
     recorder = null; recording = false;
     releaseMicrophone();
     const denied = error.name === 'NotAllowedError' || error.name === 'SecurityError';
     const missing = error.name === 'NotFoundError';
     status(denied ? '麦克风权限没有开启。请在浏览器地址栏允许麦克风，或用“导入录音”。' : missing ? '没有找到麦克风。可以连接麦克风，或用“导入录音”。' : error.message || '无法开启麦克风，请稍后重试。', true);
-  } finally { requestingMic = false; syncUI(); }
+  } finally { if (epoch === captureEpoch) { requestingMic = false; syncUI(); } }
 }
 
 function stopRecording() {
@@ -416,6 +417,7 @@ ui.convert.addEventListener('click',convert);
 ui['retry-model'].addEventListener('click',loadModel);
 ui['play-midi'].addEventListener('click',() => playMidi().catch(error=>{stopPlayback();status('音频播放没有启动，请再点一次“听 MIDI”。',true);console.error(error);}));
 ui.original.addEventListener('play',stopPlayback);
+window.addEventListener('jammate-stop-preview',stopPlayback);
 document.querySelector('#band-panel audio').addEventListener('play',stopPlayback);
 ui.timbre.addEventListener('change',()=>updateOutputs({preserveBand:true}));
 ui.variant.addEventListener('change',updateOutputs);

@@ -1,7 +1,9 @@
 // One render belongs to the selected input. Discard late responses after a new take.
 export function attachBandPanel(panel) {
+  const embedded = window.parent !== window && new URLSearchParams(location.search).has('sessionInput');
   panel.innerHTML = `<h3>听乐队回应</h3>
     <p>用这段输入编排伴奏，生成后可以试听或下载。</p>
+    <button type="button" data-add-session hidden>加入当前会话</button>
     <button type="button" data-render>生成伴奏</button>
     <a data-event download="band-input.json">下载乐队输入 JSON</a>
     <p role="status" data-status></p>
@@ -15,6 +17,27 @@ export function attachBandPanel(panel) {
   original.addEventListener('play', () => audio.pause());
   let current, pending;
   const urls = [];
+  if (embedded) {
+    find('h3').textContent = '把这段素材加入会话';
+    find('p').textContent = '使用当前选择的识别结果；原录音留在这里供你回听。';
+    find('[data-add-session]').hidden = false;
+    button.hidden = true;
+    find('[data-add-session]').onclick = () => {
+      if (current) {
+        window.parent.postMessage({type:'jammate-input',event:current}, location.origin);
+        find('[data-status]').textContent = '已加入当前会话。更新识别结果后，可再次点击替换素材。';
+      }
+    };
+    const notifyPlay = () => window.parent.postMessage({type:'jammate-play'},location.origin);
+    document.addEventListener('play',notifyPlay,true);
+    document.addEventListener('click',event=>{if(event.target.closest('#play-midi,#record'))notifyPlay();});
+    window.addEventListener('message',event=>{
+      if(event.source===window.parent&&event.origin===location.origin&&event.data?.type==='jammate-pause') {
+        document.querySelectorAll('audio').forEach(a=>a.pause());
+        window.dispatchEvent(new Event('jammate-stop-preview'));
+      }
+    });
+  }
 
   function url(blob) {
     const value = URL.createObjectURL(blob);

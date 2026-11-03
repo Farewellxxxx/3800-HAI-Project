@@ -20,6 +20,27 @@ try {
     await page.waitForFunction(()=>window.stopped===1);
     await page.evaluate(()=>window.dispatchEvent(new PageTransitionEvent('pageshow',{persisted:true})));
     assert(await page.locator('#record').isEnabled(),route+' can record after return');
+    await page.evaluate(()=>{
+      window.pendingMic=[];window.lateStopped=0;
+      navigator.mediaDevices.getUserMedia=()=>new Promise(resolve=>window.pendingMic.push(resolve));
+      document.querySelector('#record').click();
+    });
+    await page.waitForFunction(()=>window.pendingMic.length===1);
+    await page.evaluate(()=>{
+      window.dispatchEvent(new PageTransitionEvent('pagehide',{persisted:true}));
+      window.dispatchEvent(new PageTransitionEvent('pageshow',{persisted:true}));
+      document.querySelector('#record').click();
+    });
+    await page.waitForFunction(()=>window.pendingMic.length===2);
+    await page.evaluate(()=>window.pendingMic[0]({getTracks:()=>[{stop:()=>window.lateStopped++}]}));
+    await page.waitForFunction(()=>window.lateStopped===1);
+    assert(await page.locator('#record').isDisabled(),route+' old permission result must not unlock new capture');
+    await page.evaluate(()=>{
+      window.dispatchEvent(new PageTransitionEvent('pagehide',{persisted:true}));
+      window.pendingMic[1]({getTracks:()=>[{stop:()=>window.lateStopped++}]});
+    });
+    await page.waitForFunction(()=>window.lateStopped===2);
+    await page.evaluate(()=>window.dispatchEvent(new PageTransitionEvent('pageshow',{persisted:true})));
     await page.locator('#example').click();
     const action=route.includes('rhythm')?'#analyze':'#convert';
     await page.waitForFunction(id=>!document.querySelector(id).disabled,action);

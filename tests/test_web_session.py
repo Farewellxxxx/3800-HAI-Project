@@ -108,11 +108,14 @@ def test_simplify_and_bass_toggle_have_actual_effects():
     {'key': {'tonic': 12, 'mode': 'major'}}, {'placement_beats': -1},
     {'tempo_source': 'rhythm'},
 ])
-def test_invalid_settings_do_not_replace_accepted_draft(settings):
+def test_invalid_settings_preserve_music_but_invalidate_old_draft(settings):
     store, sid = session()
     with pytest.raises(ValueError):
         store.update(sid, 2, draft(**settings))
-    assert store.render(sid, 1, 'r1')['revision'] == 1
+    with pytest.raises(ValueError):
+        store.render(sid, 1, 'r1')
+    store.update(sid, 3, draft())
+    assert store.render(sid, 3, 'r1')['revision'] == 3
 
 
 def test_combined_inputs_require_explicit_alignment():
@@ -173,7 +176,24 @@ def test_key_suggestion_does_not_change_selected_key():
     store, sid = session(draft(key=None))
     summary = store.update(sid, 2, draft(key=None))
     assert 'key_suggestion' in summary
+    assert summary['key_suggestion']['ambiguous'], 'a five-note phrase is insufficient evidence for a confident key'
     assert store.render(sid, 2, 'r1')['state']['harmony']['key'] is None
+
+
+def test_invalid_new_draft_also_cancels_inflight_old_revision(monkeypatch):
+    store, sid = session()
+    execute = input_band.execute_render
+    def edit_during_render(*args, **kwargs):
+        with pytest.raises(ValueError):
+            store.update(sid, 2, draft(bpm=0))
+        return execute(*args, **kwargs)
+    monkeypatch.setattr(input_band, 'execute_render', edit_during_render)
+    with pytest.raises(ValueError, match='未提交'):
+        store.render(sid, 1, 'old', text='鼓更有力')
+    monkeypatch.setattr(input_band, 'execute_render', execute)
+    store.update(sid, 3, draft())
+    result = store.render(sid, 3, 'new')
+    assert next(x for x in result['state']['arrangement']['layers'] if x['name']=='drums')['level'] == .5
 
 
 def test_one_pitch_has_no_key_suggestion():
@@ -199,3 +219,14 @@ def test_selected_harmony_changes_accompaniment_without_transposing_source(tonic
     assert played['bass'][0][0] % 12 == tonic
     steps = {0,2,4,5,7,9,11} if mode == 'major' else {0,2,3,5,7,8,10}
     assert all((n[0]-tonic) % 12 in steps for layer in ['bass','keys'] for n in played[layer])
+
+
+def test_saved_revision_can_reproduce_accumulated_adjustments():
+    from jammate import web_session
+    store, sid = session()
+    store.render(sid, 1, 'r1', text='鼓更有力')
+    result = store.render(sid, 1, 'r2', text='简化')
+    assert hasattr(web_session, 'replay_revision'), 'saved revision replay not implemented'
+    replayed = web_session.replay_revision(result)
+    assert tracks(replayed) == tracks(result)
+    assert replayed['state'] == result['state']

@@ -65,7 +65,7 @@ $('record').onclick=async()=>{
     };
     clearAudio();capture.start();setPhase('recording');timer=setTimeout(stopRecording,20000);
     $('status').textContent=$('count').value==='0'?'正在录音：按指定 BPM 拍一小节。':'正在录音：四下均匀定速，接着一小节。';
-  }catch(e){releaseMicrophone();recorder=null;reportError(e);setPhase('idle');}
+  }catch(e){if(epoch!==captureEpoch)return;releaseMicrophone();recorder=null;reportError(e);setPhase('idle');}
 };
 for(const id of ['count','tempo','origin'])$(id).onchange=()=>{clearResult();sync();};
 $('analyze').onclick=async()=>{
