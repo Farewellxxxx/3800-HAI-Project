@@ -87,6 +87,8 @@ def prepare_plan(state: JamState, plan: BandPlan, *, seed=3800) -> PlannedPerfor
     if any(n.end > bars * 4 for n in lead):
         raise PlanError("generated motif extends past plan lifetime")
     lead_bars = place_lead(lead, start)
+    echo = next((a for a in data['actions'] if a['action'] == 'ECHO_MOTIF'), None)
+    reference_lead = place_lead(tuple(replace(n, instrument='lead') for n in state.motif(echo['parameters']['motif_id']).notes), start) if echo else {}
     all_notes = []
     violations = set()
     for offset in range(bars):
@@ -105,7 +107,7 @@ def prepare_plan(state: JamState, plan: BandPlan, *, seed=3800) -> PlannedPerfor
         # Explicit start/stop governs audibility globally. Compare preserved
         # arrangements under that same transport control, including a restart.
         reference = state.with_updates(playing=target.playing)
-        baseline = _layers(arrange_bar(reference, bar), reference, bar=bar) if reference.playing else ()
+        baseline = _layers(arrange_bar(reference, bar, reference_lead.get(bar, ())), reference, bar=bar) if reference.playing else ()
         for preserved in data["preserve"]:
             if preserved.startswith("layer:"):
                 instrument = preserved[6:]

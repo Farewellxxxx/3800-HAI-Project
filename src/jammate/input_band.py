@@ -57,7 +57,10 @@ def execute_render(manager, plan, *, fluidsynth=None, soundfont=None):
         result = OfflineRuntime().execute(manager, plan)
         wav_buffer, midi_buffer = io.BytesIO(), io.BytesIO()
         sf.write(wav_buffer, result.audio, result.sample_rate, format="WAV", subtype="PCM_16")
-        to_pretty_midi(tuple(n.shifted(-result.start_bar * 4) for n in result.notes), result.tempo_bpm).write(midi_buffer)
+        from pretty_midi import Text
+        midi_document = to_pretty_midi(tuple(n.shifted(-result.start_bar * 4) for n in result.notes), result.tempo_bpm)
+        midi_document.text_events.append(Text('JamMate passage end', result.bars * 4 * 60 / result.tempo_bpm))
+        midi_document.write(midi_buffer)
         wav, midi = wav_buffer.getvalue(), midi_buffer.getvalue()
         renderer, warnings = "JamMate / NumPy", []
     return {

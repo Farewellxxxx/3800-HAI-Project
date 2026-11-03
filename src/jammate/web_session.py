@@ -13,7 +13,7 @@ from threading import RLock
 from uuid import uuid4
 
 from jammate.analysis.key import estimate_key
-from jammate.contracts import InputEvent
+from jammate.contracts import InputEvent, BandPlan
 from jammate.contracts.adapters import from_text, to_legacy_phrase
 from jammate.interaction import TransportPosition
 from jammate.music import Key
@@ -87,7 +87,8 @@ def validate_draft(draft):
     suggestion = None
     if 'humming' in events:
         phrase = to_legacy_phrase(events['humming'], tempo_bpm=bpm, beat_origin_s=origin, placement_beats=placement)
-        if max(n.end for n in phrase.notes) > 64:
+        recording_end = (events['humming'].payload['melody']['source']['durationSec'] - origin) * bpm / 60 + placement
+        if max(recording_end, max(n.end for n in phrase.notes)) > 64 + 1e-8:
             raise ValueError('旋律与放置位置超过 16 小节，请缩短录音或减少偏移。')
         estimate = estimate_key(phrase.notes)
         if estimate:
@@ -213,7 +214,7 @@ class SessionStore:
             layers = tuple(replace(x, active=True) if x.name in {'bass','keys'} else x for x in layers)
         state = previous.with_updates(tempo_bpm=settings['bpm'], key=key, layers=layers,
             position=TransportPosition(), motifs=(), current_motif_id=None, last_user_motif=(),
-            last_ai_motif=(), rhythm=None, rhythm_sources=(),
+            last_ai_motif=(), rhythm=previous.rhythm if 'rhythm' in data['inputs'] else None, rhythm_sources=(),
             interaction=replace(previous.interaction, user_active=False, awaiting_user=False))
         manager = StateManager(state)
         events, placements = [], {}
@@ -232,7 +233,11 @@ class SessionStore:
         decision = plan.to_dict()
         if decision['unresolved']:
             raise ValueError('指令未执行：' + '；'.join(decision['unresolved']))
-        if decision['transport'] or any(a['action'] in {'VARY_MOTIF','INTRODUCE_MOTIF'} or (a['scope']=='lead' and a['action']!='ECHO_MOTIF') for a in decision['actions']):
+        if decision['transport'] or any(a['action'] in {'VARY_MOTIF','INTRODUCE_MOTIF'} or (a['scope']=='lead' and a['action'] not in {'ECHO_MOTIF','PRESERVE'}) for a in decision['actions']):
             raise ValueError('此工作台保留输入旋律；请用速度设置调整 BPM，用播放按钮停止试听。')
+        if 'humming' in data['inputs']:
+            duration = data['inputs']['humming']['payload']['melody']['source']['durationSec']
+            end = (duration-settings['melody_origin_s'])*settings['bpm']/60 + settings['placement_beats']
+            plan = BandPlan.from_dict({**decision, 'valid_for_bars': max(decision['valid_for_bars'], math.ceil(end/4-1e-9))})
         manager.stage(plan)
         return manager, plan, events

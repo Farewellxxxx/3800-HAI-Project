@@ -230,3 +230,42 @@ def test_saved_revision_can_reproduce_accumulated_adjustments():
     replayed = web_session.replay_revision(result)
     assert tracks(replayed) == tracks(result)
     assert replayed['state'] == result['state']
+
+
+@pytest.mark.parametrize('text', ['鼓保持', '节奏保持', '鼓更有力，节奏保持', '主旋律保持'])
+def test_explicit_preservation_works_on_combined_input(text):
+    store, sid = session(draft(combined=True))
+    before = store.render(sid, 1, 'r1')
+    after = store.render(sid, 1, 'r2', text=text)
+    for role in ['lead', 'bass', 'keys']:
+        assert tracks(before)[role] == tracks(after)[role]
+    if text == '鼓更有力，节奏保持':
+        assert [n[:3] for n in tracks(before)['drums']] == [n[:3] for n in tracks(after)['drums']]
+        assert tracks(before)['drums'] != tracks(after)['drums']
+    else:
+        assert tracks(before)['drums'] == tracks(after)['drums']
+
+
+def long_rest(seconds=20, **settings):
+    data = draft(**settings)
+    event = data['inputs']['humming']
+    event['started_at'] = event['ended_at'] = None
+    event['payload']['melody']['source']['durationSec'] = seconds
+    return data
+
+
+def test_trailing_recorded_rest_survives_wav_and_midi_export():
+    import soundfile as sf
+    store, sid = session(long_rest())
+    result = store.render(sid, 1, 'r1')
+    assert result['bars'] == 10
+    audio, sr = sf.read(io.BytesIO(base64.b64decode(result['wav'])))
+    assert len(audio)/sr >= 20
+    midi = pretty_midi.PrettyMIDI(io.BytesIO(base64.b64decode(result['midi'])))
+    assert midi.get_end_time() >= 20
+    assert [n[0] for n in tracks(result)['lead']] == [60,64,67,64,62]
+
+
+def test_trailing_rest_is_included_in_the_sixteen_bar_limit():
+    with pytest.raises(ValueError, match='16'):
+        session(long_rest(seconds=30, bpm=180))

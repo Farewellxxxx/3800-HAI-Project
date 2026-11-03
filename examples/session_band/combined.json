@@ -4,7 +4,7 @@
       {
         "action": "ECHO_MOTIF",
         "parameters": {
-          "motif_id": "motif_bddc056f-237a-492d-9b91-69d5abae2c8a:humming"
+          "motif_id": "motif_d358e647-06f9-4490-994f-fe3af6e43462:humming"
         },
         "scope": "lead",
         "strength": 0.5
@@ -12,7 +12,7 @@
       {
         "action": "ADJUST_FEEL",
         "parameters": {
-          "rhythm_event_id": "bddc056f-237a-492d-9b91-69d5abae2c8a:rhythm"
+          "rhythm_event_id": "d358e647-06f9-4490-994f-fe3af6e43462:rhythm"
         },
         "scope": "band",
         "strength": 0.5
@@ -24,19 +24,19 @@
       "beat": 0
     },
     "plan_confidence": null,
-    "plan_id": "web_bddc056f-237a-492d-9b91-69d5abae2c8a",
+    "plan_id": "web_d358e647-06f9-4490-994f-fe3af6e43462",
     "preserve": [
       "tempo",
       "key"
     ],
     "reason": "Echo the latest observed phrase without removing its leading rest; Adopt rhythmic onsets at the existing session tempo",
     "schema_version": "1.0.0",
-    "session_id": "44d534726a734a0ab41ec5873b20a571",
+    "session_id": "bc5b3decff2d443a857e421c921ef459",
     "strategy": "RESPOND",
     "transport": {},
     "trigger_event_ids": [
-      "bddc056f-237a-492d-9b91-69d5abae2c8a:rhythm",
-      "bddc056f-237a-492d-9b91-69d5abae2c8a:humming"
+      "d358e647-06f9-4490-994f-fe3af6e43462:rhythm",
+      "d358e647-06f9-4490-994f-fe3af6e43462:humming"
     ],
     "unresolved": [],
     "valid_for_bars": 4
@@ -53,12 +53,12 @@
     "plan_count": 1,
     "turn_count": 1
   },
-  "session_id": "44d534726a734a0ab41ec5873b20a571",
+  "session_id": "bc5b3decff2d443a857e421c921ef459",
   "revision": 6,
-  "request_id": "bddc056f-237a-492d-9b91-69d5abae2c8a",
+  "request_id": "d358e647-06f9-4490-994f-fe3af6e43462",
   "state": {
     "schema_version": "1.0.0",
-    "session_id": "44d534726a734a0ab41ec5873b20a571",
+    "session_id": "bc5b3decff2d443a857e421c921ef459",
     "state_version": 2,
     "transport": {
       "bar": 4,
@@ -86,13 +86,13 @@
       "tags": []
     },
     "motifs": {
-      "current_id": "motif_bddc056f-237a-492d-9b91-69d5abae2c8a:humming",
+      "current_id": "motif_d358e647-06f9-4490-994f-fe3af6e43462:humming",
       "items": [
         {
-          "motif_id": "motif_bddc056f-237a-492d-9b91-69d5abae2c8a:humming",
+          "motif_id": "motif_d358e647-06f9-4490-994f-fe3af6e43462:humming",
           "owner": "user",
           "source_event_ids": [
-            "bddc056f-237a-492d-9b91-69d5abae2c8a:humming"
+            "d358e647-06f9-4490-994f-fe3af6e43462:humming"
           ],
           "notes": [
             {
@@ -269,7 +269,7 @@
     "rhythm_mode": "follow",
     "rhythm_sources": [
       {
-        "event_id": "bddc056f-237a-492d-9b91-69d5abae2c8a:rhythm",
+        "event_id": "d358e647-06f9-4490-994f-fe3af6e43462:rhythm",
         "context": {
           "tempo_bpm": 100.44642857142858,
           "onset_beats": [
@@ -293,7 +293,7 @@
   },
   "state_before": {
     "schema_version": "1.0.0",
-    "session_id": "44d534726a734a0ab41ec5873b20a571",
+    "session_id": "bc5b3decff2d443a857e421c921ef459",
     "state_version": 0,
     "transport": {
       "bar": 0,
@@ -382,7 +382,7 @@
     "rhythm": {
       "confidence": null,
       "ended_at": 6,
-      "event_id": "evt_300082b1b5644e778448cf123262457d",
+      "event_id": "evt_6e9126501ed64647ab8525462c57775c",
       "event_type": "rhythm_seed",
       "payload": {
         "audio_duration_s": 6,
@@ -412,21 +412,21 @@
         "producer": "legacy_rhythm"
       },
       "schema_version": "1.0.0",
-      "session_id": "fb9cefc0-5a6c-43ce-90d7-875200736ef8",
+      "session_id": "2f124256-4643-4b48-acb3-029b10a94ff9",
       "source": "rhythm",
       "started_at": 0
     },
     "humming": {
       "confidence": null,
       "ended_at": 4.400041666666667,
-      "event_id": "0cedcd36-7217-42da-ac1d-2ce379c12b69",
+      "event_id": "718caf3e-8f0d-4adb-b937-cc2e507d46da",
       "event_type": "musical_phrase",
       "payload": {
         "melody": {
-          "analysisElapsedMs": 9741,
+          "analysisElapsedMs": 9749,
           "appVersion": "1.1.0",
-          "createdAt": "2026-11-03T10:17:46.235Z",
-          "id": "a284cbef-bba6-4173-9a9d-36a74c0fef39",
+          "createdAt": "2026-11-03T10:29:19.448Z",
+          "id": "5771d169-f2bd-4bbf-8e8c-7bd310c3ee35",
           "input": {
             "channels": 1,
             "processing": {
@@ -905,11 +905,11 @@
             "decodedChannels": 1,
             "decodedSampleRateHz": 48000,
             "durationSec": 4.400041666666667,
-            "id": "a284cbef-bba6-4173-9a9d-36a74c0fef39",
+            "id": "5771d169-f2bd-4bbf-8e8c-7bd310c3ee35",
             "kind": "example",
             "mimeType": "audio/wav",
             "name": "合成旋律示例",
-            "sessionId": "a926d096-5cc3-4188-b683-c93dac6db74e"
+            "sessionId": "2f3f97bb-1550-4a5b-83c4-75d15b471834"
           },
           "status": "ready",
           "tempo": {
@@ -927,11 +927,11 @@
       },
       "provenance": {
         "producer": "melody_v1",
-        "source_id": "a284cbef-bba6-4173-9a9d-36a74c0fef39",
+        "source_id": "5771d169-f2bd-4bbf-8e8c-7bd310c3ee35",
         "source_schema_version": "1.0.0"
       },
       "schema_version": "1.2.0",
-      "session_id": "a926d096-5cc3-4188-b683-c93dac6db74e",
+      "session_id": "2f3f97bb-1550-4a5b-83c4-75d15b471834",
       "source": "humming",
       "started_at": 0
     }
@@ -940,7 +940,7 @@
     {
       "confidence": null,
       "ended_at": null,
-      "event_id": "bddc056f-237a-492d-9b91-69d5abae2c8a:rhythm",
+      "event_id": "d358e647-06f9-4490-994f-fe3af6e43462:rhythm",
       "event_type": "rhythm_seed",
       "payload": {
         "audio_duration_s": 6,
@@ -970,21 +970,21 @@
         "producer": "legacy_rhythm"
       },
       "schema_version": "1.0.0",
-      "session_id": "44d534726a734a0ab41ec5873b20a571",
+      "session_id": "bc5b3decff2d443a857e421c921ef459",
       "source": "rhythm",
       "started_at": null
     },
     {
       "confidence": null,
       "ended_at": null,
-      "event_id": "bddc056f-237a-492d-9b91-69d5abae2c8a:humming",
+      "event_id": "d358e647-06f9-4490-994f-fe3af6e43462:humming",
       "event_type": "musical_phrase",
       "payload": {
         "melody": {
-          "analysisElapsedMs": 9741,
+          "analysisElapsedMs": 9749,
           "appVersion": "1.1.0",
-          "createdAt": "2026-11-03T10:17:46.235Z",
-          "id": "a284cbef-bba6-4173-9a9d-36a74c0fef39",
+          "createdAt": "2026-11-03T10:29:19.448Z",
+          "id": "5771d169-f2bd-4bbf-8e8c-7bd310c3ee35",
           "input": {
             "channels": 1,
             "processing": {
@@ -1463,11 +1463,11 @@
             "decodedChannels": 1,
             "decodedSampleRateHz": 48000,
             "durationSec": 4.400041666666667,
-            "id": "a284cbef-bba6-4173-9a9d-36a74c0fef39",
+            "id": "5771d169-f2bd-4bbf-8e8c-7bd310c3ee35",
             "kind": "example",
             "mimeType": "audio/wav",
             "name": "合成旋律示例",
-            "sessionId": "a926d096-5cc3-4188-b683-c93dac6db74e"
+            "sessionId": "2f3f97bb-1550-4a5b-83c4-75d15b471834"
           },
           "status": "ready",
           "tempo": {
@@ -1485,11 +1485,11 @@
       },
       "provenance": {
         "producer": "melody_v1",
-        "source_id": "a284cbef-bba6-4173-9a9d-36a74c0fef39",
+        "source_id": "5771d169-f2bd-4bbf-8e8c-7bd310c3ee35",
         "source_schema_version": "1.0.0"
       },
       "schema_version": "1.2.0",
-      "session_id": "44d534726a734a0ab41ec5873b20a571",
+      "session_id": "bc5b3decff2d443a857e421c921ef459",
       "source": "humming",
       "started_at": null
     }
