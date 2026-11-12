@@ -20,6 +20,7 @@ import soundfile as sf
 from jammate.analysis.rhythm import analyze_rhythm_audio
 from jammate.contracts import InputEvent
 from jammate.contracts.adapters import from_rhythm, from_text
+from jammate.music import Note
 from jammate.orchestration.agent import RuleAgent
 from jammate.orchestration.llm import LLMAgent, ProviderFailure
 from jammate.orchestration.llm_config import LLMConfig, LLMConfigurationError
@@ -71,6 +72,23 @@ def rhythm_clip(body):
     return {"event_id": event.event_id, "mode": result.mode.value, "bars": bars,
             "tempo_bpm": context.tempo_bpm, "renderer": "原版节拍编排",
             **media(result.audio, result.sr, result.notes, context.tempo_bpm)}
+
+
+def rhythm_hits_midi(body):
+    event = InputEvent.from_dict(body["event"])
+    if event.event_type != "rhythm_seed" or event.payload["status"] != "ready":
+        raise ValueError("请先识别有效的节拍。")
+    context = RhythmContext(**event.payload["rhythm"])
+    beats = context.onset_beats
+    ends = (*beats[1:], context.beats_per_bar)
+    notes = tuple(
+        Note(36, beat, min(.125, end - beat), max(1, round(accent * 127)), "drums")
+        for beat, end, accent in zip(beats, ends, context.accents)
+    )
+    midi = io.BytesIO()
+    to_pretty_midi(notes, context.tempo_bpm).write(midi)
+    return {"midi": base64.b64encode(midi.getvalue()).decode("ascii"),
+            "duration_s": context.beats_per_bar * 60 / context.tempo_bpm}
 
 
 @dataclass
@@ -245,7 +263,8 @@ def main(snapshot, fluidsynth, soundfont):
         if not Path(module.__file__).resolve().is_relative_to(root):
             raise RuntimeError("reference worker must import the pinned snapshot")
     service = ReferenceService(Path(fluidsynth) if fluidsynth else None, Path(soundfont) if soundfont else None)
-    routes = {"rhythm/analyze": analyze, "rhythm/create": rhythm_clip, "text/turn": service.text_turn,
+    routes = {"rhythm/analyze": analyze, "rhythm/create": rhythm_clip, "rhythm/midi": rhythm_hits_midi,
+              "text/turn": service.text_turn,
               "text/status": lambda _: service.status(), "style": service.style_sample}
     for line in sys.stdin:
         try:

@@ -53,7 +53,7 @@ class Handler(SimpleHTTPRequestHandler):
                     self.json_response(415, {"error": "请提交 JSON。"})
                     return
                 operation = self.path.removeprefix("/api/reference/")
-                if operation not in {"rhythm/analyze", "rhythm/create", "text/status", "text/turn", "style"}:
+                if operation not in {"rhythm/analyze", "rhythm/create", "rhythm/midi", "text/status", "text/turn", "style"}:
                     self.json_response(404, {"error": "unknown reference endpoint"})
                     return
                 body = json.loads(self.rfile.read(length))

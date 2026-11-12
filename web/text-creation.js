@@ -1,8 +1,11 @@
+import { downloadMrt2Input, prepareMrt2Input } from './mrt2-input.js';
+
 const $ = id => document.getElementById(id);
 const prompt = $('creation-prompt'), agent = $('text-agent');
 const bpm = $('text-bpm'), profile = $('text-profile');
 const audio = $('text-audio'), status = $('text-status');
 const example = document.querySelector('[data-prompt]');
+const mrt2Export = $('text-mrt2-export');
 let session = crypto.randomUUID();
 let turn = 0, pending = null;
 const attempts = new Map();
@@ -22,6 +25,7 @@ function sync() {
   for (const field of [prompt, example, $('new-work'), $('text-generate')]) field.disabled = busy;
   for (const field of [agent, bpm, profile]) field.disabled = busy || turn > 0;
   $('text-generate').textContent = turn ? '继续调整' : '生成第一段';
+  mrt2Export.disabled = busy || !prompt.value.trim();
 }
 
 function clearAudio() {
@@ -54,7 +58,12 @@ $('new-work').addEventListener('click', newWork);
 example.onclick = () => {
   prompt.value = example.dataset.prompt;
   prompt.focus();
+  sync();
 };
+prompt.addEventListener('input', sync);
+mrt2Export.addEventListener('click', () => {
+  downloadMrt2Input(prepareMrt2Input('text', {prompt: prompt.value}));
+});
 
 $('text-form').addEventListener('submit', async event => {
   event.preventDefault();
@@ -101,6 +110,7 @@ window.addEventListener('pagehide', event => {
   else clearAudio();
 });
 
+sync();
 post('status', {}).then(result => {
   agent.options[0].disabled = !result.llm_ready;
   for (const option of [...profile.options].slice(1)) option.disabled = !result.soundfont;

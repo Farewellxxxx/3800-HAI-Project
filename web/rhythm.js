@@ -1,23 +1,96 @@
 import {attachBandPanel} from './band-panel.js';
+import {downloadMrt2Input, downloadMrt2Midi, prepareMrt2Input} from './mrt2-input.js';
+
 const $=id=>document.getElementById(id);
+const mrt2Source = $('rhythm-mrt2-source');
+const mrt2Status = $('rhythm-mrt2-status');
+let buffer, sourceURL, recorder, stream, timer, phase='idle', startedAt=0, disposed=false;
+let sessionId, captureEpoch=0, operation=0;
+let selectedRhythm = null;
+let arrangement = null;
+let mrt2Request = null;
 const selectBandInput = attachBandPanel($('band-panel'), {
   endpoint: '/api/reference/rhythm/create',
   payload: event => ({
     event, mode: $('rhythm-mode').value, energy: Number($('rhythm-energy').value), bars: Number($('rhythm-bars').value)
-  })
+  }),
+  onResult: result => {
+    arrangement = result;
+    if (mrt2Source.value === 'arrangement') {
+      cancelMrt2Export();
+      syncMrt2Input();
+    }
+  }
 });
-let buffer, sourceURL, recorder, stream, timer, phase='idle', startedAt=0, disposed=false;
-let sessionId, captureEpoch=0, operation=0;
-let selectedRhythm = null;
+
+function syncMrt2Input() {
+  const useArrangement = mrt2Source.value === 'arrangement';
+  const ready = selectedRhythm?.payload.status === 'ready' && (!useArrangement || arrangement);
+  $('rhythm-mrt2-midi').disabled = $('rhythm-mrt2-export').disabled = !ready || phase !== 'idle' || Boolean(mrt2Request);
+  if (useArrangement && selectedRhythm && !arrangement)
+    mrt2Status.textContent = '请先用上方的「生成音乐」编好伴奏。';
+}
+
+function cancelMrt2Export() {
+  mrt2Request?.abort();
+  mrt2Request = null;
+  mrt2Status.textContent = '';
+}
+
+async function exportMrt2(save) {
+  const event = selectedRhythm;
+  if (phase !== 'idle' || event?.payload.status !== 'ready' || mrt2Request) return;
+  const useArrangement = mrt2Source.value === 'arrangement';
+  if (useArrangement && !arrangement) return;
+  const request = new AbortController();
+  mrt2Request = request;
+  mrt2Status.textContent = '正在准备所选 MIDI…';
+  syncMrt2Input();
+  try {
+    let midi, duration;
+    if (useArrangement) {
+      midi = arrangement.midi;
+      duration = arrangement.bars * 4 * 60 / arrangement.tempo_bpm;
+    } else {
+      const response = await fetch('/api/reference/rhythm/midi', {
+        method: 'POST', signal: request.signal,
+        headers: {'Content-Type': 'application/json'}, body: JSON.stringify({event})
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error);
+      midi = result.midi;
+      duration = result.duration_s;
+    }
+    if (mrt2Request !== request) return;
+    save(prepareMrt2Input(useArrangement ? 'rhythm_arrangement' : 'rhythm_hits', {midi, duration}));
+    mrt2Status.textContent = '已导出所选输入。';
+  } catch (error) {
+    if (mrt2Request === request) mrt2Status.textContent = `导出失败：${error.message}`;
+  } finally {
+    if (mrt2Request === request) {
+      mrt2Request = null;
+      syncMrt2Input();
+    }
+  }
+}
+
+mrt2Source.onchange = () => {
+  cancelMrt2Export();
+  syncMrt2Input();
+};
+$('rhythm-mrt2-midi').onclick = () => exportMrt2(downloadMrt2Midi);
+$('rhythm-mrt2-export').onclick = () => exportMrt2(downloadMrt2Input);
+
 function sync(){
   for(const id of ['file','example','count','tempo','origin'])$(id).disabled=phase!=='idle';
   $('tempo').disabled=phase!=='idle'||$('count').value!=='0';
   $('record').disabled=!['idle','recording'].includes(phase);
   $('record').textContent=phase==='recording'?'停止录音':'开始录音';
   $('analyze').disabled=phase!=='idle'||!buffer;
+  syncMrt2Input();
 }
 function setPhase(value){phase=value;sync();}
-function clearResult(){ selectedRhythm=null;selectBandInput(null);$('result').hidden=true; }
+function clearResult(){ selectedRhythm=null;cancelMrt2Export();selectBandInput(null);syncMrt2Input();$('result').hidden=true; }
 function clearAudio(){
   clearResult();buffer=null;sessionId=null;$('original').pause();$('original').removeAttribute('src');$('original').load();
   if(sourceURL)URL.revokeObjectURL(sourceURL);sourceURL=null;
@@ -99,6 +172,6 @@ $('analyze').onclick=async()=>{
     $('result').hidden=false;$('status').textContent='已识别节拍。你可以选择编排方式，再生成音乐。';
   }catch(e){if(token===operation)$('status').textContent=`分析失败：${e.message}`;}finally{if(token===operation)setPhase('idle');}
 };
-window.addEventListener('pagehide',event=>{disposed=true;captureEpoch++;operation++;recorder=null;releaseMicrophone();$('original').pause();if(!event.persisted&&sourceURL)URL.revokeObjectURL(sourceURL);setPhase('idle');});
+window.addEventListener('pagehide',event=>{disposed=true;captureEpoch++;operation++;cancelMrt2Export();recorder=null;releaseMicrophone();$('original').pause();if(!event.persisted&&sourceURL)URL.revokeObjectURL(sourceURL);setPhase('idle');});
 window.addEventListener('pageshow',()=>{disposed=false;sync();});
 sync();

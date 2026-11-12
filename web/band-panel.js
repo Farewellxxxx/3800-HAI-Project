@@ -1,5 +1,5 @@
 // One render belongs to the selected input. Discard late responses after a new take.
-export function attachBandPanel(panel, {endpoint = '/api/create', payload = event => event} = {}) {
+export function attachBandPanel(panel, {endpoint = '/api/create', payload = event => event, onResult} = {}) {
   panel.innerHTML = `<h3>听创作结果</h3>
     <p>从这次输入发展出一段新音乐，生成后可以试听或下载。</p>
     <button type="button" data-render>生成音乐</button>
@@ -41,6 +41,7 @@ export function attachBandPanel(panel, {endpoint = '/api/create', payload = even
     panel.hidden = !event;
     button.disabled = !event;
     if (event) find('[data-event]').href = url(new Blob([JSON.stringify(event, null, 2)], {type:'application/json'}));
+    onResult?.(null);
   }
   button.onclick = async () => {
     const event = current;
@@ -64,6 +65,7 @@ export function attachBandPanel(panel, {endpoint = '/api/create', payload = even
       find('[data-status]').textContent = `${result.bars} 小节 · ${result.tempo_bpm.toFixed(1)} BPM${agentLabel} · ${result.renderer}`;
       if (result.warnings?.length || result.manager_diagnostics?.last_log_error)
         find('[data-status]').textContent += ' · 部分诊断记录未能保存';
+      onResult?.(result);
     } catch (error) {
       if (request === pending) {
         find('[data-status]').textContent = `生成失败：${error.message}`;

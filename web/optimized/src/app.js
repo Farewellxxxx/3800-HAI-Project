@@ -1,6 +1,7 @@
 import { decodeHumming, frameRms } from './continuity.js';
 import { hummingEvent } from './input-event.js';
 import { attachBandPanel } from '../../band-panel.js';
+import { downloadMrt2Input, prepareMrt2Input } from '../../mrt2-input.js';
 const selectBandInput = attachBandPanel(document.querySelector('#band-panel'));
 import * as tf from '@tensorflow/tfjs';
 import { BasicPitch, outputToNotesPoly, noteFramesToTime } from '@spotify/basic-pitch';
@@ -37,6 +38,7 @@ function syncUI() {
   ui.convert.disabled = inferenceRunning || busy || recording || requestingMic || !prepared || prepared.metadata.quality.status === 'rejected' || !modelReady;
   for (const key of ['normalize','trim','variant','timbre']) ui[key].disabled = busy || recording || requestingMic;
   ui['play-midi'].disabled = busy || recording || !playbackNotes.length;
+  $('humming-mrt2-export').disabled = busy || recording || requestingMic || !midiBytes || !playbackNotes.length;
   ui.convert.firstElementChild.textContent = busy ? '正在转换…' : '转成 MIDI';
   ui.record.setAttribute('aria-label', recording ? '停止录音' : '开始录音');
   ui['mic-icon'].hidden = recording;
@@ -452,6 +454,11 @@ ui.example.addEventListener('click',async()=>{
   finally{if(token===operation){busy=false;syncUI();}}
 });
 new ResizeObserver(()=>drawRoll(playing?Math.max(0,audioCtx.currentTime-playStart):-1)).observe(ui['piano-roll']);
+$('humming-mrt2-export').addEventListener('click', () => {
+  if (!midiBytes || !playbackNotes.length) return;
+  const duration = Math.max(trackDuration, ...playbackNotes.map(note => note.time + note.duration));
+  downloadMrt2Input(prepareMrt2Input('humming', {midi: midiBytes, duration}));
+});
 window.addEventListener('pagehide',event=>{
   operation++; ui.progress.hidden = true;
   captureEpoch++; recorder = null; recording = false; busy = false; requestingMic = false;

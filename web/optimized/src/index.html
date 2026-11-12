@@ -58,6 +58,7 @@
             <canvas id="piano-roll" aria-label="音符图：横轴为时间，纵轴为音高。" role="img"></canvas>
             <div class="playback-controls"><button id="play-midi" class="play-button" type="button"><span aria-hidden="true">▶</span> 听 MIDI</button><label class="tone-label">音色<select id="timbre"><option value="soft">柔和合成器</option><option value="bright">明亮合成器</option><option value="pluck">短促拨弦</option></select></label></div>
             <div class="result-bottom"><div class="export-actions"><a id="download-midi" class="download-button" download="jammate-hum.mid">下载 MIDI ↓</a><a id="download-event" class="download-button" download>旧版输入 JSON ↓</a><a id="download-json" class="download-button" download="jammate-hum.json">下载 JSON ↓</a></div><span id="conversion-time"></span></div>
+            <button type="button" id="humming-mrt2-export" class="download-button" disabled>导出 MRT2 输入</button>
             <section id="band-panel" hidden></section>
             <p class="result-hint">试听与下载使用当前版本，时间从原录音开始。<br>试听统一力度，方便比较旋律；外部 MIDI 音源可能不同。</p>
             <details class="export-help"><summary>这些文件有什么用？</summary><p>MIDI 用于音乐软件；JSON 包含两版音符、当前选择、音频检查及处理记录，方便接入 JamMate。</p><p>MIDI 内的 120 BPM 只用于记录时间，并非检测到的速度；没有对齐节拍。JSON 中保留 BPM 未知。原录音请单独下载，刷新页面后需重新导入。</p></details>
