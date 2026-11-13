@@ -43,6 +43,7 @@ async function artifact(kind,result){
    }finally{await context.close();}
  });
  assert(decoded.rms>.0001);assert(decoded.playing && decoded.readyState>=3,JSON.stringify(decoded));
+ assert(decoded.playbackAdvanced,'browser playback clock must advance');
  if(real)assert.equal(decoded.channels,2);
  await page.screenshot({path:path.join(out,kind+'.png'),fullPage:true});
  report.cases.push({kind,event_id:result.input_event.event_id,plan_id:result.plan.plan_id,
@@ -61,6 +62,8 @@ try{
  assert.equal(reply.request().postDataJSON().text,raw,'submitted text must retain exact whitespace');
  assert.equal(result.input_event.payload.text,raw);
  assert.equal(result.input_event.source,'text');assert.equal(result.input_event.confidence,null);
+ const textDownload=await page.locator('#text-event').evaluate(async a=>(await fetch(a.href)).json());
+ assert.deepEqual(textDownload,result.input_event,'downloaded text event must match the accepted event');
  await artifact('text',result);
 
  for(const kind of ['rhythm','humming']){

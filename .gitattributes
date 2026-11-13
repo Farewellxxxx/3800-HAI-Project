@@ -1,0 +1,2 @@
+# Bash entry point is executed by WSL even from a Windows checkout.
+scripts/start_input_mrt2_wsl.sh text eol=lf

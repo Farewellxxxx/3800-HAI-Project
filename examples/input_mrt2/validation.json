@@ -1,0 +1,362 @@
+{
+  "recorded_at": "2026-11-13T19:10:50.785219+00:00",
+  "python_junit": {
+    "name": "pytest",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "0",
+    "tests": "466",
+    "time": "52.172",
+    "timestamp": "2026-11-14T02:56:14.230769+08:00",
+    "hostname": "LAPTOP-BNMKBFRR"
+  },
+  "browser_and_js_logs": {
+    "input_browser": "baseline { raw: 14, selected: 12, eventValid: true, midiConsistent: true }\noptimized {\n  raw: 14,\n  selected: 5,\n  eventValid: true,\n  midiConsistent: true,\n  repeatable: true\n}\n{\"versions\":{\"baseline\":{\"raw\":14,\"selected\":12,\"eventValid\":true,\"midiConsistent\":true},\"optimized\":{\"raw\":14,\"selected\":5,\"eventValid\":true,\"midiConsistent\":true,\"repeatable\":true}},\"hummingBand\":{\"duration\":11.1,\"rms\":0.1590595854751888,\"renderer\":\"JamMate / NumPy\",\"bars\":4,\"tempo\":100},\"uploadedSustain\":{\"duration\":11.1,\"rms\":0.16459540956342775,\"renderer\":\"JamMate / NumPy\",\"bars\":4,\"tempo\":100},\"rhythmBand\":{\"duration\":11.0573125,\"rms\":0.10376984909915488,\"renderer\":\"JamMate / NumPy\",\"bars\":4,\"tempo\":100.44642857142858},\"rhythmFollow\":{\"duration\":11.0573125,\"rms\":0.0981728914552001,\"renderer\":\"JamMate / NumPy\",\"bars\":4,\"tempo\":100.44642857142858},\"rhythmSimplify\":{\"duration\":11.0573125,\"rms\":0.07963837729600934,\"renderer\":\"JamMate / NumPy\",\"bars\":4,\"tempo\":100.44642857142858},\"uploadedRhythm\":{\"duration\":9.5213125,\"rms\":0.10683261180267568,\"renderer\":\"JamMate / NumPy\",\"bars\":4,\"tempo\":119.68085106382979},\"rhythm\":{\"bpm\":100.44642857142858,\"onsets\":[0,1,1.5,3],\"independentClipSessions\":true},\"appendix\":{\"cases\":5,\"comparisonSwitchWorks\":true,\"mobileOverflow\":false},\"pageErrors\":[]}",
+    "lifecycle": "Lifecycle regression passed; no physical microphone was used.",
+    "navigation": "/baseline/dist/ pending mic cleanup and cached-page restoration passed\n/optimized/dist/ pending mic cleanup and cached-page restoration passed\n/rhythm.html pending mic cleanup and cached-page restoration passed",
+    "async_cancellation": "Cancelled analysis and decoding cannot publish after page restoration/replacement.",
+    "text_retry_and_fluidsynth": "{\"textTurns\":[1,2],\"textTempo\":92,\"renderer\":\"Kevin / FluidSynth\",\"provider\":\"rule\",\"settings\":\"acoustic\",\"responseRetryDeduped\":true,\"independentFromRhythm\":true,\"styleSamples\":[\"lofi\",\"warm_funk\",\"indie_rock\"],\"styleTempo\":100,\"pageErrors\":[]}",
+    "legacy_mrt2_handoff": "MRT2 handoff: rhythm MIDI selection, humming MIDI bytes, raw text, and original generation passed.",
+    "three_inputs_numpy": "Passed 3 inputs: real_numpy_synthesis; artifacts C:\\Users\\Hanson\\.codex\\worktrees\\jammate-input-mrt2\\3800-HAI-Project\\tmp\\input-mrt2-precise",
+    "three_inputs_real_mrt2_first": "Passed 3 inputs: real_magenta_rt; artifacts C:\\Users\\Hanson\\.codex\\worktrees\\jammate-input-mrt2\\3800-HAI-Project\\tmp\\input-mrt2-real",
+    "three_inputs_real_mrt2_final": "Passed 3 inputs: real_magenta_rt; artifacts C:\\Users\\Hanson\\.codex\\worktrees\\jammate-input-mrt2\\3800-HAI-Project\\tmp\\input-mrt2-final",
+    "javascript_unit_tests": "✔ text handoff preserves spaces and punctuation without requiring MIDI (1.5942ms)\n✔ humming handoff preserves the exact MIDI bytes (1.1343ms)\n✔ optional trim preserves interior rests, original samples and original time mapping (24.3771ms)\n✔ untrimmed input retains its complete timeline; volume change cannot move notes (20.3622ms)\n✔ near silence is rejected without infinite gain or fabricated notes (4.6902ms)\n✔ quiet audio receives bounded gain and a warning (27.4744ms)\n✔ source clipping is reported even if stereo downmix hides it (18.5323ms)\n✔ validity bounds clip note ends and reject malformed pitches and durations (0.3695ms)\n✔ weak short tails merge without altering raw notes; strong repeats and uncertain onsets survive (0.9634ms)\n✔ suspected octaves and other simultaneous pitches are retained for review (0.235ms)\n✔ both variants and all timbres export consistent MIDI/JSON; free rhythm and trailing silence survive (28.3155ms)\n✔ empty detection has an explicit no_notes state (15.2297ms)\n✔ continuous long note remains one note despite repeated model onset peaks (6.1183ms)\n✔ semitone vibrato and short dropouts do not fragment one sustained note (3.2124ms)\n✔ stable pitch changes and true octave changes survive (2.9286ms)\n✔ real silence splits even same-pitch singing (0.9281ms)\n✔ clearly articulated short notes survive (0.7836ms)\n✔ articulated short changes survive overlapping activation from the previous pitch (0.6955ms)\n✔ silence cannot create notes (1.6216ms)\n✔ an audible weak pitch sustains an established note but cannot start one (2.0328ms)\n✔ original timing offset and raw source are preserved (1.7111ms)\n✔ selected variant controls event notes and status; session offset leaves relative notes unchanged (8.5902ms)\n✔ event preserves selected evidence as a snapshot, without inventing confidence or tempo (0.7929ms)\n✔ optional trim preserves interior rests, original samples and original time mapping (21.0693ms)\n✔ untrimmed input retains its complete timeline; volume change cannot move notes (19.0021ms)\n✔ near silence is rejected without infinite gain or fabricated notes (5.1395ms)\n✔ quiet audio receives bounded gain and a warning (24.0146ms)\n✔ source clipping is reported even if stereo downmix hides it (21.1351ms)\n✔ validity bounds clip note ends and reject malformed pitches and durations (0.3371ms)\n✔ weak short tails merge without altering raw notes; strong repeats and uncertain onsets survive (0.771ms)\n✔ suspected octaves and other simultaneous pitches are retained for review (0.1901ms)\n✔ both variants and all timbres export consistent MIDI/JSON; free rhythm and trailing silence survive (22.6774ms)\n✔ empty detection has an explicit no_notes state (13.181ms)\nℹ tests 33\nℹ suites 0\nℹ pass 33\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 525.8159"
+  },
+  "final_real_browser": {
+    "mode": "real_magenta_rt",
+    "url": "http://127.0.0.1:4197",
+    "cases": [
+      {
+        "kind": "text",
+        "event_id": "7f4d5cf9-d9d7-4b56-9fe9-e41ff2e1fdbc",
+        "plan_id": "web_9b6ef1c44e9443e1859392f2fe8a209f",
+        "renderer": "MRT2 / generated preview",
+        "receipt": {
+          "schema_version": "1.0.0",
+          "session_id": "1c66b7f9-d884-4899-8fe8-f958389dda5c",
+          "plan_id": "web_9b6ef1c44e9443e1859392f2fe8a209f",
+          "based_on_state_version": 1,
+          "effective_bar": 0,
+          "completed_bar": 4,
+          "backend": "jax",
+          "mode": "offline_export",
+          "succeeded": false,
+          "phase": "preview",
+          "artifact_generated": true,
+          "state_committed": false,
+          "capabilities": {
+            "preserve": [
+              {
+                "constraint": "key",
+                "guaranteed": false,
+                "evidence": "conditioning_only"
+              },
+              {
+                "constraint": "layer:drums",
+                "guaranteed": false,
+                "evidence": "conditioning_only"
+              },
+              {
+                "constraint": "layer:bass",
+                "guaranteed": false,
+                "evidence": "conditioning_only"
+              },
+              {
+                "constraint": "layer:keys",
+                "guaranteed": false,
+                "evidence": "conditioning_only"
+              }
+            ],
+            "actions": [
+              {
+                "action": "INTRODUCE_MOTIF",
+                "scope": "lead",
+                "guaranteed": false
+              }
+            ],
+            "exact_notes": false,
+            "exact_timbre": false,
+            "state_commit_allowed": false,
+            "limitations": [
+              "25 Hz pitch union; velocity, program and voice identity are lost",
+              "Binary drum condition cannot identify kick/snare/hi-hat",
+              "Generated audio is not a verification of pitch, tempo, key, layers or motif preservation",
+              "Each exported clip starts fresh model context; no physical playback receipt"
+            ]
+          },
+          "midi_verification": {
+            "note_count": 50,
+            "max_time_error_s": 1.3913043463986696e-06,
+            "tolerance_s": 0.0006793579166666667,
+            "duration_s": 10.434783999999999,
+            "programs": {
+              "1": 4,
+              "2": 33,
+              "4": 73
+            }
+          },
+          "wav": {
+            "sample_rate": 48000,
+            "channels": 2,
+            "duration_s": 10.434791666666667,
+            "rms": 0.05959696095783987,
+            "peak": 0.41339111328125
+          },
+          "inference": "real_magenta_rt",
+          "model": "mrt2_small",
+          "prompt": "a warm instrumental band",
+          "frames": 261,
+          "duration_s": 10.434791666666667,
+          "elapsed_s": 8.198046376000093,
+          "midi_sha256": "3b2ad4c32023b0b7ae8e3dd8aaacfc401c545184361dd3a6ec0fb91ac0484a37",
+          "conditioning": "text_and_midi",
+          "frame_quantization_s": 0.04,
+          "official_source": "https://github.com/magenta/magenta-realtime/tree/694a545e4ba0b88bf1150137b129582166d3e07f",
+          "midi_role": "conditioning_not_transcription",
+          "state_version_after": 1,
+          "manager_diagnostics": {
+            "log_write_failures": 0,
+            "last_log_error": null,
+            "event_count": 1,
+            "plan_count": 1,
+            "turn_count": 1
+          },
+          "persistence_warnings": []
+        },
+        "decoded": {
+          "duration": 10.434791666666667,
+          "channels": 2,
+          "sampleRate": 48000,
+          "rms": 0.059348288646812714,
+          "playbackAdvanced": true,
+          "playing": true,
+          "readyState": 4
+        }
+      },
+      {
+        "kind": "rhythm",
+        "event_id": "evt_5bd7fe5a54e74cdc83253cd4e33034a8",
+        "plan_id": "band_e000531d76c54ed38a947b0bfe483f29",
+        "renderer": "MRT2 / generated preview",
+        "receipt": {
+          "schema_version": "1.0.0",
+          "session_id": "9d151cb7-b9f3-416a-8dbd-78e790973798",
+          "plan_id": "band_e000531d76c54ed38a947b0bfe483f29",
+          "based_on_state_version": 1,
+          "effective_bar": 0,
+          "completed_bar": 4,
+          "backend": "jax",
+          "mode": "offline_export",
+          "succeeded": false,
+          "phase": "preview",
+          "artifact_generated": true,
+          "state_committed": false,
+          "capabilities": {
+            "preserve": [
+              {
+                "constraint": "tempo",
+                "guaranteed": false,
+                "evidence": "conditioning_only"
+              },
+              {
+                "constraint": "key",
+                "guaranteed": false,
+                "evidence": "conditioning_only"
+              }
+            ],
+            "actions": [
+              {
+                "action": "ADJUST_FEEL",
+                "scope": "band",
+                "guaranteed": false
+              }
+            ],
+            "exact_notes": false,
+            "exact_timbre": false,
+            "state_commit_allowed": false,
+            "limitations": [
+              "25 Hz pitch union; velocity, program and voice identity are lost",
+              "Binary drum condition cannot identify kick/snare/hi-hat",
+              "Generated audio is not a verification of pitch, tempo, key, layers or motif preservation",
+              "Each exported clip starts fresh model context; no physical playback receipt"
+            ]
+          },
+          "midi_verification": {
+            "note_count": 144,
+            "max_time_error_s": 5.333333332302459e-06,
+            "tolerance_s": 0.0006222318750000001,
+            "duration_s": 9.557328,
+            "programs": {
+              "1": 4,
+              "2": 33,
+              "4": 73
+            }
+          },
+          "wav": {
+            "sample_rate": 48000,
+            "channels": 2,
+            "duration_s": 9.557333333333334,
+            "rms": 0.08897379502161068,
+            "peak": 0.531402587890625
+          },
+          "inference": "real_magenta_rt",
+          "model": "mrt2_small",
+          "prompt": "a warm instrumental band",
+          "frames": 239,
+          "duration_s": 9.557333333333334,
+          "elapsed_s": 5.731155516999934,
+          "midi_sha256": "815091a60ab38df40437670919f5739cbe5aec0ecea3471be6d5a276b09556fa",
+          "conditioning": "text_and_midi",
+          "frame_quantization_s": 0.04,
+          "official_source": "https://github.com/magenta/magenta-realtime/tree/694a545e4ba0b88bf1150137b129582166d3e07f",
+          "midi_role": "conditioning_not_transcription",
+          "state_version_after": 1,
+          "manager_diagnostics": {
+            "log_write_failures": 0,
+            "last_log_error": null,
+            "event_count": 1,
+            "plan_count": 1,
+            "turn_count": 1
+          },
+          "persistence_warnings": []
+        },
+        "timing_s": {
+          "intake_and_plan": 0.004092780000064522,
+          "render_and_encode": 5.763486107999938
+        },
+        "decoded": {
+          "duration": 9.557333333333334,
+          "channels": 2,
+          "sampleRate": 48000,
+          "rms": 0.0890532529102061,
+          "playbackAdvanced": true,
+          "playing": true,
+          "readyState": 4
+        }
+      },
+      {
+        "kind": "humming",
+        "event_id": "04b7e902-afbe-47b6-8a3b-d3f360761d2b",
+        "plan_id": "band_3eed2e7a4b8d48c1a7d375c19906388a",
+        "renderer": "MRT2 / generated preview",
+        "receipt": {
+          "schema_version": "1.0.0",
+          "session_id": "d93ef8b9-12a7-4a22-a863-11dcc53a36b1",
+          "plan_id": "band_3eed2e7a4b8d48c1a7d375c19906388a",
+          "based_on_state_version": 1,
+          "effective_bar": 0,
+          "completed_bar": 4,
+          "backend": "jax",
+          "mode": "offline_export",
+          "succeeded": false,
+          "phase": "preview",
+          "artifact_generated": true,
+          "state_committed": false,
+          "capabilities": {
+            "preserve": [
+              {
+                "constraint": "tempo",
+                "guaranteed": false,
+                "evidence": "conditioning_only"
+              },
+              {
+                "constraint": "key",
+                "guaranteed": false,
+                "evidence": "conditioning_only"
+              },
+              {
+                "constraint": "layer:drums",
+                "guaranteed": false,
+                "evidence": "conditioning_only"
+              },
+              {
+                "constraint": "layer:bass",
+                "guaranteed": false,
+                "evidence": "conditioning_only"
+              },
+              {
+                "constraint": "layer:keys",
+                "guaranteed": false,
+                "evidence": "conditioning_only"
+              }
+            ],
+            "actions": [
+              {
+                "action": "VARY_MOTIF",
+                "scope": "lead",
+                "guaranteed": false
+              }
+            ],
+            "exact_notes": false,
+            "exact_timbre": false,
+            "state_commit_allowed": false,
+            "limitations": [
+              "25 Hz pitch union; velocity, program and voice identity are lost",
+              "Binary drum condition cannot identify kick/snare/hi-hat",
+              "Generated audio is not a verification of pitch, tempo, key, layers or motif preservation",
+              "Each exported clip starts fresh model context; no physical playback receipt"
+            ]
+          },
+          "midi_verification": {
+            "note_count": 49,
+            "max_time_error_s": 0.0005470000000005193,
+            "tolerance_s": 0.0006250100000000001,
+            "duration_s": 9.600000000000003,
+            "programs": {
+              "1": 4,
+              "2": 33,
+              "4": 73
+            }
+          },
+          "wav": {
+            "sample_rate": 48000,
+            "channels": 2,
+            "duration_s": 9.6,
+            "rms": 0.08765372652485416,
+            "peak": 0.613494873046875
+          },
+          "inference": "real_magenta_rt",
+          "model": "mrt2_small",
+          "prompt": "a warm instrumental band",
+          "frames": 240,
+          "duration_s": 9.6,
+          "elapsed_s": 6.119981619999976,
+          "midi_sha256": "ed8b69dabfca7b120b8ba40a715afbefe21ff5dc543c6c4ed13bb0d34be60d9e",
+          "conditioning": "text_and_midi",
+          "frame_quantization_s": 0.04,
+          "official_source": "https://github.com/magenta/magenta-realtime/tree/694a545e4ba0b88bf1150137b129582166d3e07f",
+          "midi_role": "conditioning_not_transcription",
+          "state_version_after": 1,
+          "manager_diagnostics": {
+            "log_write_failures": 0,
+            "last_log_error": null,
+            "event_count": 1,
+            "plan_count": 1,
+            "turn_count": 1
+          },
+          "persistence_warnings": []
+        },
+        "timing_s": {
+          "intake_and_plan": 0.015058296000006521,
+          "render_and_encode": 6.14453778099994
+        },
+        "decoded": {
+          "duration": 9.6,
+          "channels": 2,
+          "sampleRate": 48000,
+          "rms": 0.08813075835850466,
+          "playbackAdvanced": true,
+          "playing": true,
+          "readyState": 4
+        }
+      }
+    ]
+  },
+  "review": "Independent fresh-context review: no Critical/Important issues; targeted Python tests and saved evidence verified.",
+  "boundaries": [
+    "no human microphone accuracy claim",
+    "no human listening score",
+    "no physical speaker verification",
+    "real model preview does not commit musical state"
+  ]
+}

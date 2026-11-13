@@ -10,6 +10,7 @@
 | `benchmark/` | 12 个合成节奏 WAV、对应标准事件、预期 pattern/BPM 与实测结果；并非人类准确率 |
 | `model-verification.json` | 本机模型文件与团队提供的 SHA-256 清单逐项核对 |
 | `windows-packages.json` / `wsl-packages.json` | 本次安装环境版本快照 |
+| `validation.json` | Python JUnit 汇总、10 组 JS/浏览器日志和第二轮真实 MRT2 播放结果；第二轮强制断言播放时钟前进 |
 
 可先试听：[文字](real/text.wav) · [节奏](real/rhythm.wav) · [哼唱](real/humming.wav)。这些是模型生成的 preview；MIDI 表示条件，不表示 WAV 被逐音符验证。
 
