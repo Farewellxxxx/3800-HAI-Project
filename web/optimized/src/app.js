@@ -297,19 +297,17 @@ async function convert() {
   }
 }
 
+let currentInputEvent = null;
 function updateOutputs({preserveBand = false} = {}) {
   if (!melodyDocument) return;
   stopPlayback();
   const result = buildExports(melodyDocument,ui.variant.value,ui.timbre.value);
   if (eventURL) URL.revokeObjectURL(eventURL);
-  const inputEvent = hummingEvent(result.document, {sessionId:sourceInfo.sessionId, startedAt:0, eventId:`evt_${sourceInfo.id}_${ui.variant.value}`});
+  const inputEvent = preserveBand && currentInputEvent ? currentInputEvent : hummingEvent(result.document,
+    {sessionId:sourceInfo.sessionId, startedAt:0, eventId:crypto.randomUUID()});
   // A new export can reflect re-analysis or another variant of the same recording.
-  if (!preserveBand) selectBandInput({
-    schema_version:'1.2.0', event_id:crypto.randomUUID(), session_id:inputEvent.session_id,
-    source:'humming', event_type:'musical_phrase', started_at:inputEvent.started_at,
-    ended_at:inputEvent.ended_at, confidence:null, payload:{melody:result.document},
-    provenance:{producer:'melody_v1', source_id:result.document.id, source_schema_version:result.document.schemaVersion}
-  });
+  if (!preserveBand) selectBandInput(inputEvent);
+  currentInputEvent = inputEvent;
   eventURL = URL.createObjectURL(new Blob([JSON.stringify(inputEvent,null,2)],{type:'application/json'}));
   $('download-event').href = eventURL;
   $('download-event').download = `humming-${sourceInfo.id}.input-event.json`;
