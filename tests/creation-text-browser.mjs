@@ -97,7 +97,7 @@ try {
   await prompt.fill('去掉贝斯');
   await generate.click();
   await page.waitForFunction(() => document.querySelector('#text-status').textContent.includes('生成失败'));
-  assert(await output.isVisible(), 'a lost response keeps the last playable clip');
+  assert(await output.isHidden(), 'a lost response must not present the previous clip as the requested result');
   const stale = await submit('鼓少一点', 400);
   assert.match(stale.error, /已生成更新的段落/);
   const second = await submit('去掉贝斯', 200);
@@ -115,7 +115,7 @@ try {
 
   const rejected = await submit('变成一只猫', 400);
   assert.match(rejected.error, /无法执行/);
-  assert(await output.isVisible(), 'unsupported prompt keeps the successful output');
+  assert(await output.isHidden(), 'unsupported prompt must not present stale audio as a new result');
   await page.locator('#new-work').click();
   assert(await output.isHidden());
   assert(await page.locator('#text-bpm').isEnabled());

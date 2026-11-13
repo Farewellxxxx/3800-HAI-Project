@@ -2,6 +2,8 @@
 
 AIAA 3800 课程项目。JamMate 是一个本地音乐创作工作台，你可以哼一段旋律、拍一段节奏，或用一句话开始创作。三个入口都能单独生成乐队片段，支持浏览器试听、下载 WAV 和导出 MIDI。
 
+本地 `feature/input-event-mrt2` 分支已把三个主入口接到团队 InputEvent / Harness / MRT2 链路。当前机器双击 `start-input-mrt2.cmd` 启动；见[流程对比、运行步骤与验证报告](docs/integration/INPUT_MRT2_REPORT.md)和[真实输入输出样例](examples/input_mrt2/README.md)。MRT2 输出为真实模型 preview，不承诺逐音符保留，也不提交未验证的演奏状态。
+
 ## 三种创作方式
 
 | 入口 | 怎么试 | 生成结果 |

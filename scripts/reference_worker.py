@@ -132,6 +132,20 @@ class ReferenceService:
             return {"llm_ready": False, "notice": str(error), **capabilities}
         return {"llm_ready": True, "notice": "", **capabilities}
 
+    def input_render(self, body):
+        # This endpoint deliberately uses only one workspace implementation.
+        # Historical pinned snapshots keep their original demo endpoints.
+        try:
+            from jammate.render.runtime import create_runtime  # noqa: F401
+        except ImportError:
+            raise ValueError("统一输入链路需要 --implementation workspace。") from None
+        from jammate.input_band import render_clip
+        return render_clip(body["event"], creative=True,
+                           fluidsynth=self.fluidsynth, soundfont=self.soundfont,
+                           backend=body.get("renderer", "default"),
+                           allow_preview=body.get("allow_preview", False),
+                           mode=body.get("mode"), bars=body.get("bars"), energy=body.get("energy", 1))
+
     def text_turn(self, body):
         sid, rid, text = body["session_id"], body["request_id"], body["text"]
         if any(not isinstance(token, str) or not token.strip() or len(token) > 96 for token in (sid, rid)):
@@ -208,6 +222,8 @@ class ReferenceService:
             raise
         receipt = getattr(runtime, "last_receipt", None)
         result = {"session_id": sid, "request_id": rid, "turn": len(work.completed) + 1,
+                  "input_event": accepted[0].to_dict(),
+                  "state_before": snapshot.to_dict(), "state_after": manager.state.to_dict(),
                   "tempo_bpm": rendered.tempo_bpm, "start_bar": rendered.start_bar, "bars": rendered.bars,
                   "plan": decision, "agent": mode,
                   "decision_trace": getattr(agent, "last_trace", {"source": "rule"}),
@@ -286,6 +302,7 @@ def main(snapshot, fluidsynth, soundfont):
             raise RuntimeError("reference worker must import the pinned snapshot")
     service = ReferenceService(Path(fluidsynth) if fluidsynth else None, Path(soundfont) if soundfont else None)
     routes = {"rhythm/analyze": analyze, "rhythm/create": rhythm_clip, "rhythm/midi": rhythm_hits_midi,
+              "input/render": service.input_render,
               "text/turn": service.text_turn,
               "text/status": lambda _: service.status(), "style": service.style_sample}
     for line in sys.stdin:

@@ -2,7 +2,9 @@ import { decodeHumming, frameRms } from './continuity.js';
 import { hummingEvent } from './input-event.js';
 import { attachBandPanel } from '../../band-panel.js';
 import { downloadMrt2Input, prepareMrt2Input } from '../../mrt2-input.js';
-const selectBandInput = attachBandPanel(document.querySelector('#band-panel'));
+const selectBandInput = attachBandPanel(document.querySelector('#band-panel'), {
+  endpoint:'/api/reference/input/render', payload:event=>({event}), backends:true
+});
 import * as tf from '@tensorflow/tfjs';
 import { BasicPitch, outputToNotesPoly, noteFramesToTime } from '@spotify/basic-pitch';
 import { SAMPLE_RATE, measureAudio, prepareSamples } from './audio-pipeline.js';

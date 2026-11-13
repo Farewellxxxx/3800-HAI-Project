@@ -17,13 +17,13 @@ async function checkBand(kind, sample = kind) {
   const event = JSON.parse(await download('[data-event]', output + '.agent.json'));
   const rhythm = kind === 'rhythm';
   const mode = rhythm ? await page.locator('#rhythm-mode').inputValue() : null;
-  const received = page.waitForResponse(r => r.url() === base + (rhythm ? '/api/reference/rhythm/create' : '/api/create'));
+  const received = page.waitForResponse(r => r.url() === base + '/api/reference/input/render');
   await page.locator('[data-render]').click();
   const response = await received;
   const result = await response.json();
   assert.equal(response.status(), 200, result.error);
   const request = response.request().postDataJSON();
-  assert.deepEqual(rhythm ? request.event : request, event);
+  assert.deepEqual(request.event, event);
   assert.equal(result.event_id, event.event_id);
   if (rhythm) {
     assert.equal(result.mode, mode);
@@ -87,9 +87,10 @@ try{
     const event=JSON.parse(await download('#download-event',path.join(root,`tmp/browser/${version}.event.json`)));
     const doc=JSON.parse(await download('#download-json',path.join(root,`tmp/browser/${version}.melody.json`)));
     const midi=new Midi(await download('#download-midi',path.join(root,`tmp/browser/${version}.mid`)));
-    assert.equal(event.source,'humming');assert.equal(event.payload.notes.length,doc.notes.length);
-    assert.equal(midi.tracks[0].notes.length,event.payload.notes.length);
-    midi.tracks[0].notes.forEach((n,i)=>{assert.equal(n.midi,event.payload.notes[i].pitch_midi);assert(Math.abs(n.time-event.payload.notes[i].start_sec)<.0011);});
+    const eventNotes=version==='optimized' ? event.payload.melody.notes.map(n=>({pitch_midi:n.pitchMidi,start_sec:n.startSec})) : event.payload.notes;
+    assert.equal(event.source,'humming');assert.equal(eventNotes.length,doc.notes.length);
+    assert.equal(midi.tracks[0].notes.length,eventNotes.length);
+    midi.tracks[0].notes.forEach((n,i)=>{assert.equal(n.midi,eventNotes[i].pitch_midi);assert(Math.abs(n.time-eventNotes[i].start_sec)<.0011);});
     const validation=await context.request.post(`${base}/api/validate`,{data:event});assert.equal(validation.status(),200,await validation.text());
     await page.screenshot({path:path.join(root,`tmp/browser/${version}.png`),fullPage:true});
     await page.setViewportSize({width:390,height:844});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'mobile overflow');
@@ -142,7 +143,7 @@ try{
   await page.locator('#analyze').click();await page.locator('#result').waitFor({state:'visible',timeout:90000});
   const event=JSON.parse(await download('[data-event]',path.join(root,'tmp/browser/rhythm.event.json')));
   assert.equal(event.event_type,'rhythm_seed');assert.deepEqual(event.payload.rhythm.onset_beats,[0,1,1.5,3]);
-  await page.route('**/api/reference/rhythm/create', route => route.fulfill({
+  await page.route('**/api/reference/input/render', route => route.fulfill({
     status:503, contentType:'application/json', body:JSON.stringify({error:'测试：渲染暂不可用'})
   }), {times:1});
   await page.click('[data-render]');

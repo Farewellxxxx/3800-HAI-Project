@@ -1,0 +1,62 @@
+{
+  "mode": "real_numpy_synthesis",
+  "url": "http://127.0.0.1:4196",
+  "cases": [
+    {
+      "kind": "text",
+      "event_id": "e1124102-23bf-42e2-8c53-6c050a016600",
+      "plan_id": "web_bef58557b68849c9a404690d3edf29a4",
+      "renderer": "原版合成器",
+      "receipt": null,
+      "decoded": {
+        "duration": 11.934770833333333,
+        "channels": 1,
+        "sampleRate": 48000,
+        "rms": 0.15882297159037737,
+        "playbackAdvanced": true,
+        "playing": true,
+        "readyState": 4
+      }
+    },
+    {
+      "kind": "rhythm",
+      "event_id": "evt_c0a60d24cf1246bb853b200cef1d4ec4",
+      "plan_id": "band_05109debbeec4a0db63b0dcd78a36922",
+      "renderer": "JamMate / NumPy",
+      "receipt": null,
+      "timing_s": {
+        "intake_and_plan": 0.080186599996523,
+        "render_and_encode": 0.09741219999705208
+      },
+      "decoded": {
+        "duration": 11.0573125,
+        "channels": 1,
+        "sampleRate": 48000,
+        "rms": 0.10376984909915488,
+        "playbackAdvanced": true,
+        "playing": true,
+        "readyState": 4
+      }
+    },
+    {
+      "kind": "humming",
+      "event_id": "4cb54b4d-b3ec-4cae-9f59-2e0c41122423",
+      "plan_id": "band_7bfbf644faa640e598089d100ceb377b",
+      "renderer": "JamMate / NumPy",
+      "receipt": null,
+      "timing_s": {
+        "intake_and_plan": 0.020320000003266614,
+        "render_and_encode": 0.09904370000003837
+      },
+      "decoded": {
+        "duration": 11.1,
+        "channels": 1,
+        "sampleRate": 48000,
+        "rms": 0.14371514463089807,
+        "playbackAdvanced": true,
+        "playing": true,
+        "readyState": 4
+      }
+    }
+  ]
+}

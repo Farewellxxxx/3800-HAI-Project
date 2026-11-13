@@ -4,22 +4,36 @@ from __future__ import annotations
 import base64
 import io
 import tempfile
-from pathlib import Path
+import time
 from uuid import uuid4
 
 import soundfile as sf
 
-from jammate.contracts import InputEvent
+from jammate.contracts import BandPlan, InputEvent
 from jammate.contracts.adapters import from_text
 from jammate.orchestration.agent import RuleAgent
 from jammate.orchestration.manager import StateManager
-from jammate.orchestration.offline import OfflineRuntime
 from jammate.render.midi_out import to_pretty_midi
+from jammate.render.runtime import create_runtime
 from jammate.rhythm import RhythmMode
 from jammate.state import JamState
 
 
-def render_clip(document, *, creative=False, fluidsynth=None, soundfont=None):
+def render_clip(document, *, creative=False, fluidsynth=None, soundfont=None,
+                backend="default", allow_preview=False, mode=None, bars=None, energy=1):
+    """One explicit demo take, through the shared Harness and runtime factory.
+
+    Mode/energy/bars are user-selected demo settings, never perception fields.
+    The session tempo initialization below is this demo's policy, not a change
+    made by the input adapter or a parallel persistent JamState.
+    """
+    started = time.perf_counter()
+    if backend not in {"default", "fluidsynth", "mrt2"} or type(allow_preview) is not bool:
+        raise ValueError("无效的渲染后端或试听选项。")
+    if type(energy) is not int or not 0 <= energy <= 3:
+        raise ValueError("力度需为 0–3。")
+    if bars is not None and (type(bars) is not int or not 1 <= bars <= 8):
+        raise ValueError("请选择 1–8 小节。")
     if creative and isinstance(document, dict) and set(document) == {"text"}:
         text = document["text"]
         if not isinstance(text, str) or not text.strip() or len(text) > 500:
@@ -43,11 +57,17 @@ def render_clip(document, *, creative=False, fluidsynth=None, soundfont=None):
     else:
         raise ValueError("此入口需要哼唱或节奏事件。")
 
-    rhythm_mode = RhythmMode.VARY if creative and event.source == "rhythm" else RhythmMode.FOLLOW
-    manager = StateManager(JamState(session_id=event.session_id, tempo_bpm=tempo, rhythm_mode=rhythm_mode))
+    rhythm_mode = RhythmMode(mode) if mode is not None else (
+        RhythmMode.VARY if creative and event.source == "rhythm" else RhythmMode.FOLLOW)
+    manager = StateManager(JamState(session_id=event.session_id, tempo_bpm=tempo,
+                                   rhythm_mode=rhythm_mode, energy=energy))
     accepted = manager.ingest([event])
     state, history = manager.decision_snapshot()
     plan = RuleAgent().decide(accepted, state, plan_id=f"band_{uuid4().hex}", history=history, vary_input=creative)
+    # The existing rhythm page explicitly chooses its demo length. No motif is
+    # shortened, and the team's Agent still owns every strategy/action.
+    if bars is not None and event.source == "rhythm":
+        plan = BandPlan.from_dict({**plan.to_dict(), "valid_for_bars": bars})
     decision = plan.to_dict()
     if decision["unresolved"]:
         raise ValueError("指令未执行：" + "；".join(decision["unresolved"]))
@@ -56,25 +76,29 @@ def render_clip(document, *, creative=False, fluidsynth=None, soundfont=None):
             raise ValueError("请用「来一段」开始创作，可以加上「快一点」或「慢一点」。")
         raise ValueError("乐队无法用这段输入生成回应，请尝试更短的乐句或更清晰的节奏。")
     manager.stage(plan)
-    if fluidsynth is not None:
-        from renderer_experiments.app.band_plan import KevinRuntime
-
-        with tempfile.TemporaryDirectory() as directory:
-            runtime = KevinRuntime(Path(directory), executable=fluidsynth, soundfont=soundfont)
-            result = runtime.execute(manager, plan)
+    planned = time.perf_counter()
+    with tempfile.TemporaryDirectory() as directory:
+        runtime = create_runtime(directory, backend=backend, fluidsynth=fluidsynth,
+                                 soundfont=soundfont, allow_preview=allow_preview)
+        result = runtime.execute(manager, plan)
+        receipt = getattr(runtime, "last_receipt", None)
+        if getattr(runtime, "last_artifacts", None) is not None:
             wav = (runtime.last_artifacts / "band.wav").read_bytes()
             midi = (runtime.last_artifacts / "band.mid").read_bytes()
-            warnings = runtime.last_receipt["persistence_warnings"]
-        renderer = "Kevin / FluidSynth"
-    else:
-        result = OfflineRuntime().execute(manager, plan)
-        wav_buffer, midi_buffer = io.BytesIO(), io.BytesIO()
-        sf.write(wav_buffer, result.audio, result.sample_rate, format="WAV", subtype="PCM_16")
-        to_pretty_midi(result.notes, result.tempo_bpm).write(midi_buffer)
-        wav, midi = wav_buffer.getvalue(), midi_buffer.getvalue()
-        renderer, warnings = "JamMate / NumPy", []
+        else:
+            wav_buffer, midi_buffer = io.BytesIO(), io.BytesIO()
+            sf.write(wav_buffer, result.audio, result.sample_rate, format="WAV", subtype="PCM_16")
+            to_pretty_midi(result.notes, result.tempo_bpm).write(midi_buffer)
+            wav, midi = wav_buffer.getvalue(), midi_buffer.getvalue()
+    renderer = "MRT2 / generated preview" if backend == "mrt2" else (
+        "Kevin / FluidSynth" if fluidsynth else "JamMate / NumPy")
+    warnings = receipt.get("persistence_warnings", []) if receipt else []
     return {
         "event_id": event.event_id, "plan": plan.to_dict(), "bars": result.bars,
+        "input_event": event.to_dict(), "receipt": receipt,
+        "state_before": state.to_dict(), "state_after": manager.state.to_dict(),
+        "mode": rhythm_mode.value,
+        "timing_s": {"intake_and_plan": planned-started, "render_and_encode": time.perf_counter()-planned},
         "tempo_bpm": result.tempo_bpm, "renderer": renderer, "agent": "rule",
         "warnings": warnings, "manager_diagnostics": manager.diagnostics(),
         "wav": base64.b64encode(wav).decode("ascii"), "midi": base64.b64encode(midi).decode("ascii"),

@@ -1,0 +1,376 @@
+{
+  "event_id": "evt_e160bad7336f4913a43014f71424628a",
+  "plan": {
+    "actions": [
+      {
+        "action": "ADJUST_FEEL",
+        "parameters": {
+          "rhythm_event_id": "evt_e160bad7336f4913a43014f71424628a"
+        },
+        "scope": "band",
+        "strength": 0.5
+      }
+    ],
+    "based_on_state_version": 1,
+    "effective_at": {
+      "bar": 0,
+      "beat": 0
+    },
+    "plan_confidence": null,
+    "plan_id": "band_1608a6509610464d8d6342711d56112d",
+    "preserve": [
+      "tempo",
+      "key"
+    ],
+    "reason": "Adopt rhythmic onsets at the existing session tempo",
+    "schema_version": "1.0.0",
+    "session_id": "be3eccb3-0775-40e5-a436-17f2dc8e2d22",
+    "strategy": "RESPOND",
+    "transport": {},
+    "trigger_event_ids": [
+      "evt_e160bad7336f4913a43014f71424628a"
+    ],
+    "unresolved": [],
+    "valid_for_bars": 4
+  },
+  "bars": 4,
+  "input_event": {
+    "confidence": null,
+    "ended_at": 6,
+    "event_id": "evt_e160bad7336f4913a43014f71424628a",
+    "event_type": "rhythm_seed",
+    "payload": {
+      "audio_duration_s": 6,
+      "confidence_kind": "grid_alignment_heuristic",
+      "rhythm": {
+        "accents": [
+          0.7583554983139038,
+          0.3375163674354553,
+          0.5521189570426941,
+          1
+        ],
+        "beat_origin_s": 2.993333333333333,
+        "beats_per_bar": 4,
+        "confidence": 0.9553571428571408,
+        "onset_beats": [
+          0,
+          1,
+          1.5,
+          3
+        ],
+        "tempo_bpm": 100.44642857142858
+      },
+      "status": "ready",
+      "tempo_source": "detected"
+    },
+    "provenance": {
+      "producer": "legacy_rhythm"
+    },
+    "schema_version": "1.0.0",
+    "session_id": "be3eccb3-0775-40e5-a436-17f2dc8e2d22",
+    "source": "rhythm",
+    "started_at": 0
+  },
+  "receipt": {
+    "schema_version": "1.0.0",
+    "session_id": "be3eccb3-0775-40e5-a436-17f2dc8e2d22",
+    "plan_id": "band_1608a6509610464d8d6342711d56112d",
+    "based_on_state_version": 1,
+    "effective_bar": 0,
+    "completed_bar": 4,
+    "backend": "jax",
+    "mode": "offline_export",
+    "succeeded": false,
+    "phase": "preview",
+    "artifact_generated": true,
+    "state_committed": false,
+    "capabilities": {
+      "preserve": [
+        {
+          "constraint": "tempo",
+          "guaranteed": false,
+          "evidence": "conditioning_only"
+        },
+        {
+          "constraint": "key",
+          "guaranteed": false,
+          "evidence": "conditioning_only"
+        }
+      ],
+      "actions": [
+        {
+          "action": "ADJUST_FEEL",
+          "scope": "band",
+          "guaranteed": false
+        }
+      ],
+      "exact_notes": false,
+      "exact_timbre": false,
+      "state_commit_allowed": false,
+      "limitations": [
+        "25 Hz pitch union; velocity, program and voice identity are lost",
+        "Binary drum condition cannot identify kick/snare/hi-hat",
+        "Generated audio is not a verification of pitch, tempo, key, layers or motif preservation",
+        "Each exported clip starts fresh model context; no physical playback receipt"
+      ]
+    },
+    "midi_verification": {
+      "note_count": 144,
+      "max_time_error_s": 0.000005333333332302459,
+      "tolerance_s": 0.0006222318750000001,
+      "duration_s": 9.557328,
+      "programs": {
+        "1": 4,
+        "2": 33,
+        "4": 73
+      }
+    },
+    "wav": {
+      "sample_rate": 48000,
+      "channels": 2,
+      "duration_s": 9.557333333333334,
+      "rms": 0.08897379502161068,
+      "peak": 0.531402587890625
+    },
+    "inference": "real_magenta_rt",
+    "model": "mrt2_small",
+    "prompt": "a warm instrumental band",
+    "frames": 239,
+    "duration_s": 9.557333333333334,
+    "elapsed_s": 5.690758093999989,
+    "midi_sha256": "815091a60ab38df40437670919f5739cbe5aec0ecea3471be6d5a276b09556fa",
+    "conditioning": "text_and_midi",
+    "frame_quantization_s": 0.04,
+    "official_source": "https://github.com/magenta/magenta-realtime/tree/694a545e4ba0b88bf1150137b129582166d3e07f",
+    "midi_role": "conditioning_not_transcription",
+    "state_version_after": 1,
+    "manager_diagnostics": {
+      "log_write_failures": 0,
+      "last_log_error": null,
+      "event_count": 1,
+      "plan_count": 1,
+      "turn_count": 1
+    },
+    "persistence_warnings": []
+  },
+  "state_before": {
+    "schema_version": "1.0.0",
+    "session_id": "be3eccb3-0775-40e5-a436-17f2dc8e2d22",
+    "state_version": 1,
+    "transport": {
+      "bar": 0,
+      "beat": 0,
+      "next_bar": 0,
+      "tempo_bpm": 100.44642857142858,
+      "playing": true
+    },
+    "harmony": {
+      "key": {
+        "tonic": 0,
+        "mode": "major"
+      },
+      "progression_variant": 0
+    },
+    "form": {
+      "section": "groove",
+      "bars_elapsed": 0
+    },
+    "feel": {
+      "energy": 2,
+      "density": 1,
+      "brightness": 0.5,
+      "tension": 0,
+      "tags": []
+    },
+    "motifs": {
+      "current_id": null,
+      "items": [],
+      "last_user": [],
+      "last_ai": []
+    },
+    "arrangement": {
+      "layers": [
+        {
+          "name": "drums",
+          "active": true,
+          "level": 0.5,
+          "density": 1,
+          "role": "timekeeper"
+        },
+        {
+          "name": "bass",
+          "active": true,
+          "level": 0.5,
+          "density": 1,
+          "role": "support"
+        },
+        {
+          "name": "keys",
+          "active": true,
+          "level": 0.5,
+          "density": 1,
+          "role": "support"
+        },
+        {
+          "name": "lead",
+          "active": true,
+          "level": 0.5,
+          "density": 1,
+          "role": "response"
+        }
+      ]
+    },
+    "interaction": {
+      "strategy": "FOLLOW",
+      "initiative": 0,
+      "current_lead": "user",
+      "user_active": false,
+      "awaiting_user": false,
+      "last_feedback": null
+    },
+    "rhythm": null,
+    "rhythm_mode": "vary",
+    "rhythm_sources": [
+      {
+        "event_id": "evt_e160bad7336f4913a43014f71424628a",
+        "context": {
+          "tempo_bpm": 100.44642857142858,
+          "onset_beats": [
+            0,
+            1,
+            1.5,
+            3
+          ],
+          "accents": [
+            0.7583554983139038,
+            0.3375163674354553,
+            0.5521189570426941,
+            1
+          ],
+          "beat_origin_s": 2.993333333333333,
+          "beats_per_bar": 4,
+          "confidence": 0.9553571428571408
+        }
+      }
+    ]
+  },
+  "state_after": {
+    "schema_version": "1.0.0",
+    "session_id": "be3eccb3-0775-40e5-a436-17f2dc8e2d22",
+    "state_version": 1,
+    "transport": {
+      "bar": 0,
+      "beat": 0,
+      "next_bar": 0,
+      "tempo_bpm": 100.44642857142858,
+      "playing": true
+    },
+    "harmony": {
+      "key": {
+        "tonic": 0,
+        "mode": "major"
+      },
+      "progression_variant": 0
+    },
+    "form": {
+      "section": "groove",
+      "bars_elapsed": 0
+    },
+    "feel": {
+      "energy": 2,
+      "density": 1,
+      "brightness": 0.5,
+      "tension": 0,
+      "tags": []
+    },
+    "motifs": {
+      "current_id": null,
+      "items": [],
+      "last_user": [],
+      "last_ai": []
+    },
+    "arrangement": {
+      "layers": [
+        {
+          "name": "drums",
+          "active": true,
+          "level": 0.5,
+          "density": 1,
+          "role": "timekeeper"
+        },
+        {
+          "name": "bass",
+          "active": true,
+          "level": 0.5,
+          "density": 1,
+          "role": "support"
+        },
+        {
+          "name": "keys",
+          "active": true,
+          "level": 0.5,
+          "density": 1,
+          "role": "support"
+        },
+        {
+          "name": "lead",
+          "active": true,
+          "level": 0.5,
+          "density": 1,
+          "role": "response"
+        }
+      ]
+    },
+    "interaction": {
+      "strategy": "FOLLOW",
+      "initiative": 0,
+      "current_lead": "user",
+      "user_active": false,
+      "awaiting_user": false,
+      "last_feedback": null
+    },
+    "rhythm": null,
+    "rhythm_mode": "vary",
+    "rhythm_sources": [
+      {
+        "event_id": "evt_e160bad7336f4913a43014f71424628a",
+        "context": {
+          "tempo_bpm": 100.44642857142858,
+          "onset_beats": [
+            0,
+            1,
+            1.5,
+            3
+          ],
+          "accents": [
+            0.7583554983139038,
+            0.3375163674354553,
+            0.5521189570426941,
+            1
+          ],
+          "beat_origin_s": 2.993333333333333,
+          "beats_per_bar": 4,
+          "confidence": 0.9553571428571408
+        }
+      }
+    ]
+  },
+  "mode": "vary",
+  "timing_s": {
+    "intake_and_plan": 0.004434536999951888,
+    "render_and_encode": 5.883634147000009
+  },
+  "tempo_bpm": 100.44642857142858,
+  "renderer": "MRT2 / generated preview",
+  "agent": "rule",
+  "warnings": [],
+  "manager_diagnostics": {
+    "log_write_failures": 0,
+    "last_log_error": null,
+    "event_count": 1,
+    "plan_count": 1,
+    "turn_count": 1
+  },
+  "reference_commit": null,
+  "implementation": "workspace"
+}

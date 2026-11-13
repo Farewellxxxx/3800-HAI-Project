@@ -52,7 +52,8 @@ try{
      await page.waitForFunction(()=>document.querySelector('#record-timer').textContent==='00:01');
      if (stopDevice) await page.evaluate(()=>window.testStream.getTracks().forEach(track=>track.stop()));
      else await page.click('#record');
-     await page.waitForFunction(()=>!document.querySelector('#convert').disabled);
+     try { await page.waitForFunction(()=>!document.querySelector('#convert').disabled); }
+     catch (error) { throw new Error(`${version} stopDevice=${stopDevice}: ${await page.locator('#status').innerText()}; ${await page.locator('#model-label').innerText()}`, {cause:error}); }
      assert(await page.locator('#download-original').getAttribute('href'), 'completed capture remains downloadable');
    }
  }

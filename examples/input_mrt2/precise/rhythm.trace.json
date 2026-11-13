@@ -1,0 +1,312 @@
+{
+  "event_id": "evt_c0a60d24cf1246bb853b200cef1d4ec4",
+  "plan": {
+    "actions": [
+      {
+        "action": "ADJUST_FEEL",
+        "parameters": {
+          "rhythm_event_id": "evt_c0a60d24cf1246bb853b200cef1d4ec4"
+        },
+        "scope": "band",
+        "strength": 0.5
+      }
+    ],
+    "based_on_state_version": 1,
+    "effective_at": {
+      "bar": 0,
+      "beat": 0
+    },
+    "plan_confidence": null,
+    "plan_id": "band_05109debbeec4a0db63b0dcd78a36922",
+    "preserve": [
+      "tempo",
+      "key"
+    ],
+    "reason": "Adopt rhythmic onsets at the existing session tempo",
+    "schema_version": "1.0.0",
+    "session_id": "d0301d5d-6e0f-4105-b2f5-99a8de422e7f",
+    "strategy": "RESPOND",
+    "transport": {},
+    "trigger_event_ids": [
+      "evt_c0a60d24cf1246bb853b200cef1d4ec4"
+    ],
+    "unresolved": [],
+    "valid_for_bars": 4
+  },
+  "bars": 4,
+  "input_event": {
+    "confidence": null,
+    "ended_at": 6,
+    "event_id": "evt_c0a60d24cf1246bb853b200cef1d4ec4",
+    "event_type": "rhythm_seed",
+    "payload": {
+      "audio_duration_s": 6,
+      "confidence_kind": "grid_alignment_heuristic",
+      "rhythm": {
+        "accents": [
+          0.7583554983139038,
+          0.3375163674354553,
+          0.5521189570426941,
+          1
+        ],
+        "beat_origin_s": 2.993333333333333,
+        "beats_per_bar": 4,
+        "confidence": 0.9553571428571408,
+        "onset_beats": [
+          0,
+          1,
+          1.5,
+          3
+        ],
+        "tempo_bpm": 100.44642857142858
+      },
+      "status": "ready",
+      "tempo_source": "detected"
+    },
+    "provenance": {
+      "producer": "legacy_rhythm"
+    },
+    "schema_version": "1.0.0",
+    "session_id": "d0301d5d-6e0f-4105-b2f5-99a8de422e7f",
+    "source": "rhythm",
+    "started_at": 0
+  },
+  "receipt": null,
+  "state_before": {
+    "schema_version": "1.0.0",
+    "session_id": "d0301d5d-6e0f-4105-b2f5-99a8de422e7f",
+    "state_version": 1,
+    "transport": {
+      "bar": 0,
+      "beat": 0,
+      "next_bar": 0,
+      "tempo_bpm": 100.44642857142858,
+      "playing": true
+    },
+    "harmony": {
+      "key": {
+        "tonic": 0,
+        "mode": "major"
+      },
+      "progression_variant": 0
+    },
+    "form": {
+      "section": "groove",
+      "bars_elapsed": 0
+    },
+    "feel": {
+      "energy": 2,
+      "density": 1,
+      "brightness": 0.5,
+      "tension": 0,
+      "tags": []
+    },
+    "motifs": {
+      "current_id": null,
+      "items": [],
+      "last_user": [],
+      "last_ai": []
+    },
+    "arrangement": {
+      "layers": [
+        {
+          "name": "drums",
+          "active": true,
+          "level": 0.5,
+          "density": 1,
+          "role": "timekeeper"
+        },
+        {
+          "name": "bass",
+          "active": true,
+          "level": 0.5,
+          "density": 1,
+          "role": "support"
+        },
+        {
+          "name": "keys",
+          "active": true,
+          "level": 0.5,
+          "density": 1,
+          "role": "support"
+        },
+        {
+          "name": "lead",
+          "active": true,
+          "level": 0.5,
+          "density": 1,
+          "role": "response"
+        }
+      ]
+    },
+    "interaction": {
+      "strategy": "FOLLOW",
+      "initiative": 0,
+      "current_lead": "user",
+      "user_active": false,
+      "awaiting_user": false,
+      "last_feedback": null
+    },
+    "rhythm": null,
+    "rhythm_mode": "vary",
+    "rhythm_sources": [
+      {
+        "event_id": "evt_c0a60d24cf1246bb853b200cef1d4ec4",
+        "context": {
+          "tempo_bpm": 100.44642857142858,
+          "onset_beats": [
+            0,
+            1,
+            1.5,
+            3
+          ],
+          "accents": [
+            0.7583554983139038,
+            0.3375163674354553,
+            0.5521189570426941,
+            1
+          ],
+          "beat_origin_s": 2.993333333333333,
+          "beats_per_bar": 4,
+          "confidence": 0.9553571428571408
+        }
+      }
+    ]
+  },
+  "state_after": {
+    "schema_version": "1.0.0",
+    "session_id": "d0301d5d-6e0f-4105-b2f5-99a8de422e7f",
+    "state_version": 2,
+    "transport": {
+      "bar": 4,
+      "beat": 0,
+      "next_bar": 4,
+      "tempo_bpm": 100.44642857142858,
+      "playing": true
+    },
+    "harmony": {
+      "key": {
+        "tonic": 0,
+        "mode": "major"
+      },
+      "progression_variant": 0
+    },
+    "form": {
+      "section": "groove",
+      "bars_elapsed": 4
+    },
+    "feel": {
+      "energy": 2,
+      "density": 1,
+      "brightness": 0.5,
+      "tension": 0,
+      "tags": []
+    },
+    "motifs": {
+      "current_id": null,
+      "items": [],
+      "last_user": [],
+      "last_ai": []
+    },
+    "arrangement": {
+      "layers": [
+        {
+          "name": "drums",
+          "active": true,
+          "level": 0.5,
+          "density": 1,
+          "role": "timekeeper"
+        },
+        {
+          "name": "bass",
+          "active": true,
+          "level": 0.5,
+          "density": 1,
+          "role": "support"
+        },
+        {
+          "name": "keys",
+          "active": true,
+          "level": 0.5,
+          "density": 1,
+          "role": "support"
+        },
+        {
+          "name": "lead",
+          "active": true,
+          "level": 0.5,
+          "density": 1,
+          "role": "response"
+        }
+      ]
+    },
+    "interaction": {
+      "strategy": "RESPOND",
+      "initiative": 0,
+      "current_lead": "user",
+      "user_active": false,
+      "awaiting_user": false,
+      "last_feedback": null
+    },
+    "rhythm": {
+      "tempo_bpm": 100.44642857142858,
+      "onset_beats": [
+        0,
+        1,
+        1.5,
+        3
+      ],
+      "accents": [
+        0.7583554983139038,
+        0.3375163674354553,
+        0.5521189570426941,
+        1
+      ],
+      "beat_origin_s": 2.993333333333333,
+      "beats_per_bar": 4,
+      "confidence": 0.9553571428571408
+    },
+    "rhythm_mode": "vary",
+    "rhythm_sources": [
+      {
+        "event_id": "evt_c0a60d24cf1246bb853b200cef1d4ec4",
+        "context": {
+          "tempo_bpm": 100.44642857142858,
+          "onset_beats": [
+            0,
+            1,
+            1.5,
+            3
+          ],
+          "accents": [
+            0.7583554983139038,
+            0.3375163674354553,
+            0.5521189570426941,
+            1
+          ],
+          "beat_origin_s": 2.993333333333333,
+          "beats_per_bar": 4,
+          "confidence": 0.9553571428571408
+        }
+      }
+    ]
+  },
+  "mode": "vary",
+  "timing_s": {
+    "intake_and_plan": 0.080186599996523,
+    "render_and_encode": 0.09741219999705208
+  },
+  "tempo_bpm": 100.44642857142858,
+  "renderer": "JamMate / NumPy",
+  "agent": "rule",
+  "warnings": [],
+  "manager_diagnostics": {
+    "log_write_failures": 0,
+    "last_log_error": null,
+    "event_count": 1,
+    "plan_count": 1,
+    "turn_count": 1
+  },
+  "reference_commit": null,
+  "implementation": "workspace"
+}

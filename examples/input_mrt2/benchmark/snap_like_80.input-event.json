@@ -1,0 +1,37 @@
+{
+  "confidence": null,
+  "ended_at": 6.3500226757369616,
+  "event_id": "evt_snap_like_80",
+  "event_type": "rhythm_seed",
+  "payload": {
+    "audio_duration_s": 6.3500226757369616,
+    "confidence_kind": "grid_alignment_heuristic",
+    "rhythm": {
+      "accents": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "beat_origin_s": 3.197233560090703,
+      "beats_per_bar": 4,
+      "confidence": 0.9615384615384645,
+      "onset_beats": [
+        0.0,
+        1.0,
+        1.5,
+        3.0
+      ],
+      "tempo_bpm": 79.50721153846156
+    },
+    "status": "ready",
+    "tempo_source": "detected"
+  },
+  "provenance": {
+    "producer": "legacy_rhythm"
+  },
+  "schema_version": "1.0.0",
+  "session_id": "benchmark_snap_like_80",
+  "source": "rhythm",
+  "started_at": 0
+}

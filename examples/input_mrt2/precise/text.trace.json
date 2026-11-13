@@ -1,0 +1,322 @@
+{
+  "session_id": "606cc4d9-f8ce-4144-b43e-380504e539a8",
+  "request_id": "e1124102-23bf-42e2-8c53-6c050a016600",
+  "turn": 1,
+  "input_event": {
+    "confidence": null,
+    "ended_at": null,
+    "event_id": "e1124102-23bf-42e2-8c53-6c050a016600",
+    "event_type": "speech",
+    "payload": {
+      "text": "  来一段，慢一点\n"
+    },
+    "provenance": {
+      "producer": "text"
+    },
+    "schema_version": "1.0.0",
+    "session_id": "606cc4d9-f8ce-4144-b43e-380504e539a8",
+    "source": "text",
+    "started_at": null
+  },
+  "state_before": {
+    "schema_version": "1.0.0",
+    "session_id": "606cc4d9-f8ce-4144-b43e-380504e539a8",
+    "state_version": 1,
+    "transport": {
+      "bar": 0,
+      "beat": 0,
+      "next_bar": 0,
+      "tempo_bpm": 100,
+      "playing": true
+    },
+    "harmony": {
+      "key": {
+        "tonic": 0,
+        "mode": "major"
+      },
+      "progression_variant": 0
+    },
+    "form": {
+      "section": "groove",
+      "bars_elapsed": 0
+    },
+    "feel": {
+      "energy": 1,
+      "density": 1,
+      "brightness": 0.5,
+      "tension": 0,
+      "tags": []
+    },
+    "motifs": {
+      "current_id": null,
+      "items": [],
+      "last_user": [],
+      "last_ai": []
+    },
+    "arrangement": {
+      "layers": [
+        {
+          "name": "drums",
+          "active": true,
+          "level": 0.5,
+          "density": 1,
+          "role": "timekeeper"
+        },
+        {
+          "name": "bass",
+          "active": true,
+          "level": 0.5,
+          "density": 1,
+          "role": "support"
+        },
+        {
+          "name": "keys",
+          "active": true,
+          "level": 0.5,
+          "density": 1,
+          "role": "support"
+        },
+        {
+          "name": "lead",
+          "active": true,
+          "level": 0.5,
+          "density": 1,
+          "role": "response"
+        }
+      ]
+    },
+    "interaction": {
+      "strategy": "FOLLOW",
+      "initiative": 0,
+      "current_lead": "user",
+      "user_active": false,
+      "awaiting_user": false,
+      "last_feedback": "  来一段，慢一点\n"
+    },
+    "rhythm": null,
+    "rhythm_mode": "follow",
+    "rhythm_sources": []
+  },
+  "state_after": {
+    "schema_version": "1.0.0",
+    "session_id": "606cc4d9-f8ce-4144-b43e-380504e539a8",
+    "state_version": 2,
+    "transport": {
+      "bar": 4,
+      "beat": 0,
+      "next_bar": 4,
+      "tempo_bpm": 92,
+      "playing": true
+    },
+    "harmony": {
+      "key": {
+        "tonic": 0,
+        "mode": "major"
+      },
+      "progression_variant": 0
+    },
+    "form": {
+      "section": "groove",
+      "bars_elapsed": 4
+    },
+    "feel": {
+      "energy": 1,
+      "density": 1,
+      "brightness": 0.5,
+      "tension": 0,
+      "tags": []
+    },
+    "motifs": {
+      "current_id": "motif_web_bef58557b68849c9a404690d3edf29a4",
+      "items": [
+        {
+          "motif_id": "motif_web_bef58557b68849c9a404690d3edf29a4",
+          "owner": "ai",
+          "source_event_ids": [
+            "e1124102-23bf-42e2-8c53-6c050a016600"
+          ],
+          "notes": [
+            {
+              "pitch": 67,
+              "start": 0,
+              "duration": 0.5,
+              "velocity": 92,
+              "instrument": "lead"
+            },
+            {
+              "pitch": 64,
+              "start": 0.5,
+              "duration": 0.5,
+              "velocity": 92,
+              "instrument": "lead"
+            },
+            {
+              "pitch": 67,
+              "start": 1,
+              "duration": 1,
+              "velocity": 92,
+              "instrument": "lead"
+            },
+            {
+              "pitch": 64,
+              "start": 2,
+              "duration": 0.5,
+              "velocity": 92,
+              "instrument": "lead"
+            },
+            {
+              "pitch": 62,
+              "start": 2.5,
+              "duration": 0.5,
+              "velocity": 92,
+              "instrument": "lead"
+            },
+            {
+              "pitch": 60,
+              "start": 3,
+              "duration": 1,
+              "velocity": 92,
+              "instrument": "lead"
+            }
+          ]
+        }
+      ],
+      "last_user": [],
+      "last_ai": [
+        {
+          "pitch": 67,
+          "start": 0,
+          "duration": 0.5,
+          "velocity": 92,
+          "instrument": "lead"
+        },
+        {
+          "pitch": 64,
+          "start": 0.5,
+          "duration": 0.5,
+          "velocity": 92,
+          "instrument": "lead"
+        },
+        {
+          "pitch": 67,
+          "start": 1,
+          "duration": 1,
+          "velocity": 92,
+          "instrument": "lead"
+        },
+        {
+          "pitch": 64,
+          "start": 2,
+          "duration": 0.5,
+          "velocity": 92,
+          "instrument": "lead"
+        },
+        {
+          "pitch": 62,
+          "start": 2.5,
+          "duration": 0.5,
+          "velocity": 92,
+          "instrument": "lead"
+        },
+        {
+          "pitch": 60,
+          "start": 3,
+          "duration": 1,
+          "velocity": 92,
+          "instrument": "lead"
+        }
+      ]
+    },
+    "arrangement": {
+      "layers": [
+        {
+          "name": "drums",
+          "active": true,
+          "level": 0.5,
+          "density": 1,
+          "role": "timekeeper"
+        },
+        {
+          "name": "bass",
+          "active": true,
+          "level": 0.5,
+          "density": 1,
+          "role": "support"
+        },
+        {
+          "name": "keys",
+          "active": true,
+          "level": 0.5,
+          "density": 1,
+          "role": "support"
+        },
+        {
+          "name": "lead",
+          "active": true,
+          "level": 0.5,
+          "density": 1,
+          "role": "response"
+        }
+      ]
+    },
+    "interaction": {
+      "strategy": "LISTEN",
+      "initiative": 0,
+      "current_lead": "user",
+      "user_active": false,
+      "awaiting_user": true,
+      "last_feedback": "  来一段，慢一点\n"
+    },
+    "rhythm": null,
+    "rhythm_mode": "follow",
+    "rhythm_sources": []
+  },
+  "tempo_bpm": 92,
+  "start_bar": 0,
+  "bars": 4,
+  "plan": {
+    "actions": [
+      {
+        "action": "INTRODUCE_MOTIF",
+        "parameters": {
+          "motif_id": "motif_web_bef58557b68849c9a404690d3edf29a4"
+        },
+        "scope": "lead",
+        "strength": 0.5
+      }
+    ],
+    "based_on_state_version": 1,
+    "effective_at": {
+      "bar": 0,
+      "beat": 0
+    },
+    "plan_confidence": null,
+    "plan_id": "web_bef58557b68849c9a404690d3edf29a4",
+    "preserve": [
+      "key",
+      "layer:drums",
+      "layer:bass",
+      "layer:keys"
+    ],
+    "reason": "来一段; 慢一点",
+    "schema_version": "1.0.0",
+    "session_id": "606cc4d9-f8ce-4144-b43e-380504e539a8",
+    "strategy": "INITIATE",
+    "transport": {
+      "tempo_bpm": 92
+    },
+    "trigger_event_ids": [
+      "e1124102-23bf-42e2-8c53-6c050a016600"
+    ],
+    "unresolved": [],
+    "valid_for_bars": 4
+  },
+  "agent": "rule",
+  "decision_trace": {
+    "source": "rule"
+  },
+  "receipt": null,
+  "renderer": "原版合成器",
+  "reference_commit": null,
+  "implementation": "workspace"
+}

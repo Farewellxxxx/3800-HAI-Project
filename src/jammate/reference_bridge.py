@@ -1,4 +1,4 @@
-"""Call the team's pinned implementation without importing the local variant."""
+"""Run workspace or historical pinned implementations in isolated workers."""
 
 import io
 import json
@@ -89,7 +89,9 @@ class ReferenceBridge:
 
     def request(self, operation, body):
         # A slow model request must not block the recording/analysis entry.
-        group = "text" if operation.startswith("text/") else "audio"
+        # All model rendering shares one worker/model cache (important on small
+        # GPUs). Capture analysis remains responsive in the separate audio worker.
+        group = "text" if operation.startswith("text/") or operation == "input/render" else "audio"
         with self._groups[group]:
             with self._lock:
                 process = self._processes.get(group) or self._start(group)

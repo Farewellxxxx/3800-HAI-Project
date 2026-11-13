@@ -1,0 +1,330 @@
+{
+  "mode": "real_magenta_rt",
+  "url": "http://127.0.0.1:4197",
+  "cases": [
+    {
+      "kind": "text",
+      "event_id": "c3fcd6cc-d48d-44a0-8c75-9dee7fe3d862",
+      "plan_id": "web_caa616c0838448019f0d834b37741c52",
+      "renderer": "MRT2 / generated preview",
+      "receipt": {
+        "schema_version": "1.0.0",
+        "session_id": "a13bcd59-9c52-46f9-83dd-4681295ae4f2",
+        "plan_id": "web_caa616c0838448019f0d834b37741c52",
+        "based_on_state_version": 1,
+        "effective_bar": 0,
+        "completed_bar": 4,
+        "backend": "jax",
+        "mode": "offline_export",
+        "succeeded": false,
+        "phase": "preview",
+        "artifact_generated": true,
+        "state_committed": false,
+        "capabilities": {
+          "preserve": [
+            {
+              "constraint": "key",
+              "guaranteed": false,
+              "evidence": "conditioning_only"
+            },
+            {
+              "constraint": "layer:drums",
+              "guaranteed": false,
+              "evidence": "conditioning_only"
+            },
+            {
+              "constraint": "layer:bass",
+              "guaranteed": false,
+              "evidence": "conditioning_only"
+            },
+            {
+              "constraint": "layer:keys",
+              "guaranteed": false,
+              "evidence": "conditioning_only"
+            }
+          ],
+          "actions": [
+            {
+              "action": "INTRODUCE_MOTIF",
+              "scope": "lead",
+              "guaranteed": false
+            }
+          ],
+          "exact_notes": false,
+          "exact_timbre": false,
+          "state_commit_allowed": false,
+          "limitations": [
+            "25 Hz pitch union; velocity, program and voice identity are lost",
+            "Binary drum condition cannot identify kick/snare/hi-hat",
+            "Generated audio is not a verification of pitch, tempo, key, layers or motif preservation",
+            "Each exported clip starts fresh model context; no physical playback receipt"
+          ]
+        },
+        "midi_verification": {
+          "note_count": 48,
+          "max_time_error_s": 0.0000013913043463986696,
+          "tolerance_s": 0.0006793579166666667,
+          "duration_s": 10.434783999999999,
+          "programs": {
+            "1": 4,
+            "2": 33,
+            "4": 73
+          }
+        },
+        "wav": {
+          "sample_rate": 48000,
+          "channels": 2,
+          "duration_s": 10.434791666666667,
+          "rms": 0.06931392663429096,
+          "peak": 0.50048828125
+        },
+        "inference": "real_magenta_rt",
+        "model": "mrt2_small",
+        "prompt": "a warm instrumental band",
+        "frames": 261,
+        "duration_s": 10.434791666666667,
+        "elapsed_s": 62.93954370899996,
+        "midi_sha256": "3b07a675a71f0654a8d9af25517791ecc34f9ec89cac24ac08fc435c722adeb3",
+        "conditioning": "text_and_midi",
+        "frame_quantization_s": 0.04,
+        "official_source": "https://github.com/magenta/magenta-realtime/tree/694a545e4ba0b88bf1150137b129582166d3e07f",
+        "midi_role": "conditioning_not_transcription",
+        "state_version_after": 1,
+        "manager_diagnostics": {
+          "log_write_failures": 0,
+          "last_log_error": null,
+          "event_count": 1,
+          "plan_count": 1,
+          "turn_count": 1
+        },
+        "persistence_warnings": []
+      },
+      "decoded": {
+        "duration": 10.434791666666667,
+        "channels": 2,
+        "sampleRate": 48000,
+        "rms": 0.06910279042658422,
+        "playbackAdvanced": true,
+        "playing": true,
+        "readyState": 4
+      }
+    },
+    {
+      "kind": "rhythm",
+      "event_id": "evt_e160bad7336f4913a43014f71424628a",
+      "plan_id": "band_1608a6509610464d8d6342711d56112d",
+      "renderer": "MRT2 / generated preview",
+      "receipt": {
+        "schema_version": "1.0.0",
+        "session_id": "be3eccb3-0775-40e5-a436-17f2dc8e2d22",
+        "plan_id": "band_1608a6509610464d8d6342711d56112d",
+        "based_on_state_version": 1,
+        "effective_bar": 0,
+        "completed_bar": 4,
+        "backend": "jax",
+        "mode": "offline_export",
+        "succeeded": false,
+        "phase": "preview",
+        "artifact_generated": true,
+        "state_committed": false,
+        "capabilities": {
+          "preserve": [
+            {
+              "constraint": "tempo",
+              "guaranteed": false,
+              "evidence": "conditioning_only"
+            },
+            {
+              "constraint": "key",
+              "guaranteed": false,
+              "evidence": "conditioning_only"
+            }
+          ],
+          "actions": [
+            {
+              "action": "ADJUST_FEEL",
+              "scope": "band",
+              "guaranteed": false
+            }
+          ],
+          "exact_notes": false,
+          "exact_timbre": false,
+          "state_commit_allowed": false,
+          "limitations": [
+            "25 Hz pitch union; velocity, program and voice identity are lost",
+            "Binary drum condition cannot identify kick/snare/hi-hat",
+            "Generated audio is not a verification of pitch, tempo, key, layers or motif preservation",
+            "Each exported clip starts fresh model context; no physical playback receipt"
+          ]
+        },
+        "midi_verification": {
+          "note_count": 144,
+          "max_time_error_s": 0.000005333333332302459,
+          "tolerance_s": 0.0006222318750000001,
+          "duration_s": 9.557328,
+          "programs": {
+            "1": 4,
+            "2": 33,
+            "4": 73
+          }
+        },
+        "wav": {
+          "sample_rate": 48000,
+          "channels": 2,
+          "duration_s": 9.557333333333334,
+          "rms": 0.08897379502161068,
+          "peak": 0.531402587890625
+        },
+        "inference": "real_magenta_rt",
+        "model": "mrt2_small",
+        "prompt": "a warm instrumental band",
+        "frames": 239,
+        "duration_s": 9.557333333333334,
+        "elapsed_s": 5.690758093999989,
+        "midi_sha256": "815091a60ab38df40437670919f5739cbe5aec0ecea3471be6d5a276b09556fa",
+        "conditioning": "text_and_midi",
+        "frame_quantization_s": 0.04,
+        "official_source": "https://github.com/magenta/magenta-realtime/tree/694a545e4ba0b88bf1150137b129582166d3e07f",
+        "midi_role": "conditioning_not_transcription",
+        "state_version_after": 1,
+        "manager_diagnostics": {
+          "log_write_failures": 0,
+          "last_log_error": null,
+          "event_count": 1,
+          "plan_count": 1,
+          "turn_count": 1
+        },
+        "persistence_warnings": []
+      },
+      "timing_s": {
+        "intake_and_plan": 0.004434536999951888,
+        "render_and_encode": 5.883634147000009
+      },
+      "decoded": {
+        "duration": 9.557333333333334,
+        "channels": 2,
+        "sampleRate": 48000,
+        "rms": 0.0890532529102061,
+        "playbackAdvanced": true,
+        "playing": true,
+        "readyState": 4
+      }
+    },
+    {
+      "kind": "humming",
+      "event_id": "5188f728-7a11-458d-9586-6af4b32a94c8",
+      "plan_id": "band_333294f80a434ffdbb16edaf53ddccda",
+      "renderer": "MRT2 / generated preview",
+      "receipt": {
+        "schema_version": "1.0.0",
+        "session_id": "c98c6458-04b8-4c83-a304-38a1a3b5954b",
+        "plan_id": "band_333294f80a434ffdbb16edaf53ddccda",
+        "based_on_state_version": 1,
+        "effective_bar": 0,
+        "completed_bar": 4,
+        "backend": "jax",
+        "mode": "offline_export",
+        "succeeded": false,
+        "phase": "preview",
+        "artifact_generated": true,
+        "state_committed": false,
+        "capabilities": {
+          "preserve": [
+            {
+              "constraint": "tempo",
+              "guaranteed": false,
+              "evidence": "conditioning_only"
+            },
+            {
+              "constraint": "key",
+              "guaranteed": false,
+              "evidence": "conditioning_only"
+            },
+            {
+              "constraint": "layer:drums",
+              "guaranteed": false,
+              "evidence": "conditioning_only"
+            },
+            {
+              "constraint": "layer:bass",
+              "guaranteed": false,
+              "evidence": "conditioning_only"
+            },
+            {
+              "constraint": "layer:keys",
+              "guaranteed": false,
+              "evidence": "conditioning_only"
+            }
+          ],
+          "actions": [
+            {
+              "action": "VARY_MOTIF",
+              "scope": "lead",
+              "guaranteed": false
+            }
+          ],
+          "exact_notes": false,
+          "exact_timbre": false,
+          "state_commit_allowed": false,
+          "limitations": [
+            "25 Hz pitch union; velocity, program and voice identity are lost",
+            "Binary drum condition cannot identify kick/snare/hi-hat",
+            "Generated audio is not a verification of pitch, tempo, key, layers or motif preservation",
+            "Each exported clip starts fresh model context; no physical playback receipt"
+          ]
+        },
+        "midi_verification": {
+          "note_count": 49,
+          "max_time_error_s": 0.0005470000000005193,
+          "tolerance_s": 0.0006250100000000001,
+          "duration_s": 9.600000000000003,
+          "programs": {
+            "1": 4,
+            "2": 33,
+            "4": 73
+          }
+        },
+        "wav": {
+          "sample_rate": 48000,
+          "channels": 2,
+          "duration_s": 9.6,
+          "rms": 0.06994706899457953,
+          "peak": 0.656890869140625
+        },
+        "inference": "real_magenta_rt",
+        "model": "mrt2_small",
+        "prompt": "a warm instrumental band",
+        "frames": 240,
+        "duration_s": 9.6,
+        "elapsed_s": 5.2936187100000325,
+        "midi_sha256": "1edf1e2ca0f14344842fe9999291af35128952804320ac42417f770e8868a68d",
+        "conditioning": "text_and_midi",
+        "frame_quantization_s": 0.04,
+        "official_source": "https://github.com/magenta/magenta-realtime/tree/694a545e4ba0b88bf1150137b129582166d3e07f",
+        "midi_role": "conditioning_not_transcription",
+        "state_version_after": 1,
+        "manager_diagnostics": {
+          "log_write_failures": 0,
+          "last_log_error": null,
+          "event_count": 1,
+          "plan_count": 1,
+          "turn_count": 1
+        },
+        "persistence_warnings": []
+      },
+      "timing_s": {
+        "intake_and_plan": 0.012533345999997891,
+        "render_and_encode": 5.313744336000013
+      },
+      "decoded": {
+        "duration": 9.6,
+        "channels": 2,
+        "sampleRate": 48000,
+        "rms": 0.07055185027139674,
+        "playbackAdvanced": true,
+        "playing": true,
+        "readyState": 4
+      }
+    }
+  ]
+}

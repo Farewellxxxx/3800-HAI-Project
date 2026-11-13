@@ -70,13 +70,14 @@ $('text-form').addEventListener('submit', async event => {
   event.preventDefault();
   if (pending || !prompt.value.trim()) return;
   const input = {session_id: session, after_turn: turn, agent: agent.value, bpm: Number(bpm.value),
-    profile: profile.value, text: prompt.value.trim(), renderer: renderer.value, allow_preview: preview.checked};
+    profile: profile.value, text: prompt.value, renderer: renderer.value, allow_preview: preview.checked};
   const signature = JSON.stringify(input);
   if (!attempts.has(signature)) {
     attempts.set(signature, {...input, request_id: crypto.randomUUID()});
   }
   const body = attempts.get(signature);
   const request = new AbortController();
+  clearAudio();
   pending = request;
   sync();
   status.textContent = '正在编排和生成…';
@@ -87,6 +88,11 @@ $('text-form').addEventListener('submit', async event => {
     audio.src = media(result.wav, 'audio/wav');
     $('text-wav').href = audio.src;
     $('text-midi').href = media(result.midi, 'audio/midi');
+    for (const [id, value] of [['text-event', result.input_event], ['text-trace',
+      Object.fromEntries(Object.entries(result).filter(([key])=>!['wav','midi'].includes(key)))]]) {
+      const link = URL.createObjectURL(new Blob([JSON.stringify(value,null,2)],{type:'application/json'}));
+      urls.push(link);$(id).href=link;
+    }
     const uncommitted = result.receipt?.phase === 'preview';
     $('text-midi').textContent = uncommitted ? '下载条件 MIDI（非音频转写）' : '下载 MIDI';
     $('text-output').hidden = false;

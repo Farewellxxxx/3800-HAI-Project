@@ -10,7 +10,7 @@ let selectedRhythm = null;
 let arrangement = null;
 let mrt2Request = null;
 const selectBandInput = attachBandPanel($('band-panel'), {
-  endpoint: '/api/reference/rhythm/create',
+  endpoint: '/api/reference/input/render', backends: true,
   payload: event => ({
     event, mode: $('rhythm-mode').value, energy: Number($('rhythm-energy').value), bars: Number($('rhythm-bars').value)
   }),
