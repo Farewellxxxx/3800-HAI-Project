@@ -1,177 +1,497 @@
 import {attachBandPanel} from './band-panel.js';
 import {downloadMrt2Input, downloadMrt2Midi, prepareMrt2Input} from './mrt2-input.js';
+import {createRhythmEditor, latestRequest, midiVelocity, playbackSchedule} from './rhythm-editor.js';
+import {captureWindow, MAX_CAPTURE_SECONDS, pcmWave} from './rhythm-capture.js';
 
-const $=id=>document.getElementById(id);
-const mrt2Source = $('rhythm-mrt2-source');
-const mrt2Status = $('rhythm-mrt2-status');
-let buffer, sourceURL, recorder, stream, timer, phase='idle', startedAt=0, disposed=false;
-let sessionId, captureEpoch=0, operation=0;
-let selectedRhythm = null;
-let arrangement = null;
-let mrt2Request = null;
+const $ = id => document.getElementById(id);
+const analysis = latestRequest(), midiRequest = latestRequest();
+const original = $('original'), seek = $('seek');
+const midiStatus = $('rhythm-mrt2-status'), editStatus = $('edit-status');
+let buffer, sourceWave, sourceURL, eventURL, sessionId, recorder, stream, timer;
+let phase = 'idle', disposed = false, operation = 0;
+let editor, selected = -1, position = 0, prepared, midiFailed = false;
+let playbackContext, playback, playRevision = 0, playPending = false, playFrame;
+
 const selectBandInput = attachBandPanel($('band-panel'), {
-  endpoint: '/api/reference/input/render', backends: true,
+  endpoint: '/api/reference/input/render',
+  backends: true,
   payload: event => ({
-    event, mode: $('rhythm-mode').value, energy: Number($('rhythm-energy').value), bars: Number($('rhythm-bars').value)
+    event, mode: $('rhythm-mode').value, energy: Number($('rhythm-energy').value),
   }),
-  onResult: result => {
-    arrangement = result;
-    if (mrt2Source.value === 'arrangement') {
-      cancelMrt2Export();
-      syncMrt2Input();
-    }
-  }
 });
+const bandAudio = $('band-panel').querySelector('audio');
 
-function syncMrt2Input() {
-  const useArrangement = mrt2Source.value === 'arrangement';
-  const ready = selectedRhythm?.payload.status === 'ready' && (!useArrangement || arrangement);
-  $('rhythm-mrt2-midi').disabled = $('rhythm-mrt2-export').disabled = !ready || phase !== 'idle' || Boolean(mrt2Request);
-  if (useArrangement && selectedRhythm && !arrangement)
-    mrt2Status.textContent = '请先用上方的「生成音乐」编好伴奏。';
+function sync() {
+  const idle = phase === 'idle';
+  for (const id of ['file', 'example']) $(id).disabled = !idle;
+  $('record').disabled = !idle && phase !== 'recording';
+  $('record').textContent = phase === 'recording' ? '停止录音' : '开始录音';
+  $('analyze').disabled = !idle || !buffer;
+  const ready = idle && Boolean(prepared);
+  for (const id of ['play-midi', 'rhythm-mrt2-midi', 'rhythm-mrt2-export']) $(id).disabled = !ready;
+  $('play-midi').textContent = playback || playPending ? '暂停 MIDI' : '听 MIDI';
+  $('retry-midi').hidden = !midiFailed;
+  $('retry-midi').disabled = !idle;
 }
 
-function cancelMrt2Export() {
-  mrt2Request?.abort();
-  mrt2Request = null;
-  mrt2Status.textContent = '';
+function setPhase(value) {
+  phase = value;
+  sync();
 }
 
-async function exportMrt2(save) {
-  const event = selectedRhythm;
-  if (phase !== 'idle' || event?.payload.status !== 'ready' || mrt2Request) return;
-  const useArrangement = mrt2Source.value === 'arrangement';
-  if (useArrangement && !arrangement) return;
-  const request = new AbortController();
-  mrt2Request = request;
-  mrt2Status.textContent = '正在准备所选 MIDI…';
-  syncMrt2Input();
+function setPosition(seconds) {
+  const duration = editor?.event.payload.audio_duration_s ?? 0;
+  position = Math.max(0, Math.min(duration, seconds));
+  seek.value = String(position);
+  const text = `${position.toFixed(3)} 秒`;
+  $('play-position').textContent = text;
+  seek.setAttribute('aria-valuetext', text);
+  $('rhythm-cursor').style.left = `${duration ? 100 * position / duration : 0}%`;
+}
+
+function stopPlayback() {
+  playRevision++;
+  playPending = false;
+  cancelAnimationFrame(playFrame);
+  if (playback) {
+    setPosition(playback.position + Math.max(0, playbackContext.currentTime - playback.started));
+    playback.master.disconnect();
+    for (const voice of playback.voices) voice.stop();
+    playback = null;
+  }
+  sync();
+}
+
+function drumVoice(context, master, at, duration, velocity) {
+  const wave = context.createOscillator();
+  const gain = context.createGain();
+  const end = at + duration;
+  const attack = at + Math.min(.003, duration / 3);
+  const peak = .7 * (velocity / 127) ** 1.35;
+  wave.frequency.setValueAtTime(155, at);
+  wave.frequency.exponentialRampToValueAtTime(55, end);
+  gain.gain.setValueAtTime(0, at);
+  gain.gain.linearRampToValueAtTime(peak, attack);
+  gain.gain.linearRampToValueAtTime(0, end);
+  wave.connect(gain).connect(master);
+  wave.start(at);
+  wave.stop(end);
+  return wave;
+}
+
+async function playMidi() {
+  if (playback || playPending) {
+    stopPlayback();
+    return;
+  }
+  if (phase !== 'idle' || !prepared) return;
+  if (position >= prepared.duration_s) setPosition(0);
+  original.pause();
+  bandAudio.pause();
+  const revision = ++playRevision;
+  playPending = true;
+  sync();
   try {
-    let midi, duration;
-    if (useArrangement) {
-      midi = arrangement.midi;
-      duration = arrangement.bars * 4 * 60 / arrangement.tempo_bpm;
-    } else {
-      const response = await fetch('/api/reference/rhythm/midi', {
-        method: 'POST', signal: request.signal,
-        headers: {'Content-Type': 'application/json'}, body: JSON.stringify({event})
-      });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error);
-      midi = result.midi;
-      duration = result.duration_s;
+    const context = playbackContext ??= new AudioContext();
+    await context.resume();
+    if (revision !== playRevision) return;
+    const schedule = playbackSchedule(prepared, position);
+    const master = context.createGain();
+    master.connect(context.destination);
+    const started = context.currentTime + .025;
+    const voices = schedule.hits.map(hit => drumVoice(context, master, started + hit.offset, hit.duration, hit.velocity));
+    playback = {position, started, master, voices};
+    playPending = false;
+    midiStatus.textContent = '';
+    sync();
+    function advance() {
+      if (context.currentTime >= started + schedule.duration) {
+        stopPlayback();
+        return;
+      }
+      setPosition(playback.position + Math.max(0, context.currentTime - started));
+      playFrame = requestAnimationFrame(advance);
     }
-    if (mrt2Request !== request) return;
-    save(prepareMrt2Input(useArrangement ? 'rhythm_arrangement' : 'rhythm_hits', {midi, duration}));
-    mrt2Status.textContent = '已导出所选输入。';
+    playFrame = requestAnimationFrame(advance);
   } catch (error) {
-    if (mrt2Request === request) mrt2Status.textContent = `导出失败：${error.message}`;
-  } finally {
-    if (mrt2Request === request) {
-      mrt2Request = null;
-      syncMrt2Input();
-    }
+    if (revision !== playRevision) return;
+    stopPlayback();
+    midiStatus.textContent = `无法播放 MIDI：${error.message}`;
   }
 }
 
-mrt2Source.onchange = () => {
-  cancelMrt2Export();
-  syncMrt2Input();
-};
-$('rhythm-mrt2-midi').onclick = () => exportMrt2(downloadMrt2Midi);
-$('rhythm-mrt2-export').onclick = () => exportMrt2(downloadMrt2Input);
+function renderAxis(duration) {
+  const marks = [], labels = [];
+  for (let i = 0; i <= 4; i++) {
+    const tick = document.createElement('span'), label = document.createElement('span');
+    tick.className = 'rhythm-tick';
+    tick.style.left = label.style.left = `${i * 25}%`;
+    label.textContent = `${Number((i * duration / 4).toFixed(2))} 秒`;
+    marks.push(tick);
+    labels.push(label);
+  }
+  $('rhythm-grid').replaceChildren(...marks);
+  $('rhythm-axis').replaceChildren(...labels);
+}
 
-function sync(){
-  for(const id of ['file','example','count','tempo','origin'])$(id).disabled=phase!=='idle';
-  $('tempo').disabled=phase!=='idle'||$('count').value!=='0';
-  $('record').disabled=!['idle','recording'].includes(phase);
-  $('record').textContent=phase==='recording'?'停止录音':'开始录音';
-  $('analyze').disabled=phase!=='idle'||!buffer;
-  syncMrt2Input();
+function selectHit(index, seekToHit = false) {
+  const {onset_seconds: times, accents} = editor.event.payload.rhythm;
+  selected = index >= 0 && index < times.length ? index : -1;
+  $('hit-select').selectedIndex = selected;
+  for (const [i, hit] of [...$('rhythm-hits').children].entries())
+    hit.setAttribute('aria-pressed', String(i === selected));
+  for (const id of ['hit-select', 'hit-time', 'hit-velocity', 'save-hit', 'delete-hit'])
+    $(id).disabled = selected === -1;
+  $('hit-time').value = selected === -1 ? '' : String(times[selected]);
+  $('hit-velocity').value = selected === -1 ? '' : String(midiVelocity(accents[selected]));
+  if (seekToHit && selected !== -1) {
+    stopPlayback();
+    setPosition(times[selected]);
+  }
 }
-function setPhase(value){phase=value;sync();}
-function clearResult(){ selectedRhythm=null;cancelMrt2Export();selectBandInput(null);syncMrt2Input();$('result').hidden=true; }
-function clearAudio(){
-  clearResult();buffer=null;sessionId=null;$('original').pause();$('original').removeAttribute('src');$('original').load();
-  if(sourceURL)URL.revokeObjectURL(sourceURL);sourceURL=null;
-  $('download-original').hidden=true;$('download-original').removeAttribute('href');
+
+function renderHits() {
+  const {rhythm, audio_duration_s: duration} = editor.event.payload;
+  const {onset_seconds: times, accents} = rhythm;
+  const buttons = [], options = [];
+  for (const [index, time] of times.entries()) {
+    const label = `拍点 ${index + 1} · ${time.toFixed(3)} 秒`;
+    const button = document.createElement('button'), bar = document.createElement('span');
+    button.type = 'button';
+    button.className = 'rhythm-hit';
+    button.style.left = `${time / duration * 100}%`;
+    button.setAttribute('aria-label', `${label} · 相对力度 ${midiVelocity(accents[index])}`);
+    button.title = button.getAttribute('aria-label');
+    button.onclick = () => selectHit(index, true);
+    bar.style.height = `${accents[index] * 100}%`;
+    button.append(bar);
+    buttons.push(button);
+    options.push(new Option(label, String(index)));
+  }
+  $('rhythm-hits').replaceChildren(...buttons);
+  $('hit-select').replaceChildren(...options);
+  $('no-hits').hidden = times.length > 0;
+  $('undo-hit').disabled = !editor.canUndo;
+  $('summary').textContent = `${times.length} 个拍点 · ${duration.toFixed(2)} 秒`;
+  selectHit(selected);
 }
-async function load(blob,token=operation){
-  if(token!==operation)return;
-  if(blob.size>15*1024*1024)throw Error('请使用 15 MB 以内的音频');
-  let decoded;const ctx=new AudioContext();try{decoded=await ctx.decodeAudioData(await blob.arrayBuffer());}finally{await ctx.close();}
-  if(token!==operation)return;buffer=decoded;
-  if(buffer.duration<.5||buffer.duration>30){buffer=null;throw Error('录音需为 0.5–30 秒');}
-  if(sourceURL)URL.revokeObjectURL(sourceURL);sourceURL=URL.createObjectURL(blob);$('original').src=sourceURL;
-  $('download-original').href=sourceURL;
-  $('download-original').download=blob instanceof File ? blob.name : `rhythm-original.${blob.type.includes('wav')?'wav':blob.type.includes('mp4')?'m4a':blob.type.includes('ogg')?'ogg':'webm'}`;
-  $('download-original').hidden=false;
-  sessionId=crypto.randomUUID();startedAt=0; $('status').textContent=`已载入 ${buffer.duration.toFixed(1)} 秒录音。`;sync();
+
+async function post(path, body, signal) {
+  const response = await fetch(`/api/reference/${path}`, {
+    method: 'POST', signal, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body),
+  });
+  const result = await response.json();
+  if (!response.ok) throw new Error(result.error);
+  return result;
 }
-function reportError(error){$('status').textContent=error.name==='NotAllowedError'?'麦克风权限未开启，可以允许权限或导入录音。':error.name==='EncodingError'?'无法解码这段音频，请使用有效的 WAV、MP3 或 WebM 文件。':error.message;}
-async function replaceAudio(getBlob){
-  if(phase!=='idle')return;
-  const token=++operation;setPhase('loading');clearAudio();
-  try{await load(await getBlob(),token);}catch(e){if(token===operation){clearAudio();reportError(e);}}finally{if(token===operation)setPhase('idle');}
+
+function prepareMidi() {
+  midiRequest.cancel();
+  prepared = null;
+  midiFailed = false;
+  const event = editor?.event;
+  const ready = event?.payload.status === 'ready';
+  midiStatus.textContent = ready ? '正在准备当前节奏的 MIDI…' : '';
+  sync();
+  if (!ready) return;
+
+  return midiRequest.run(signal => post('rhythm/midi', {event}, signal), result => {
+    prepared = result;
+    midiStatus.textContent = '';
+    sync();
+  }, error => {
+    midiFailed = true;
+    midiStatus.textContent = `MIDI 准备失败：${error.message}`;
+    sync();
+  });
 }
-function releaseMicrophone(){clearTimeout(timer);stream?.getTracks().forEach(t=>t.stop());stream=null;}
-function stopRecording(){if(phase!=='recording'||recorder?.state!=='recording')return;setPhase('stopping');recorder.stop();}
-function wavBase64(audio){
-  const n=audio.length, data=new ArrayBuffer(44+n*2),v=new DataView(data);
-  const text=(at,s)=>[...s].forEach((c,i)=>v.setUint8(at+i,c.charCodeAt(0)));
-  text(0,'RIFF');v.setUint32(4,36+n*2,true);text(8,'WAVEfmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,audio.sampleRate,true);v.setUint32(28,audio.sampleRate*2,true);v.setUint16(32,2,true);v.setUint16(34,16,true);text(36,'data');v.setUint32(40,n*2,true);
-  for(let i=0;i<n;i++){let s=0;for(let c=0;c<audio.numberOfChannels;c++)s+=audio.getChannelData(c)[i]/audio.numberOfChannels;v.setInt16(44+i*2,Math.round(Math.max(-1,Math.min(1,s))*32767),true);}
-  const bytes=new Uint8Array(data);let textData='';for(let i=0;i<bytes.length;i+=8192)textData+=String.fromCharCode(...bytes.subarray(i,i+8192));return btoa(textData);
+
+function saveMidi(download) {
+  if (phase !== 'idle' || !prepared) return;
+  download(prepareMrt2Input('rhythm_hits', {midi: prepared.midi, duration: prepared.duration_s}));
 }
+
+function refreshEvent() {
+  stopPlayback();
+  const event = editor.event;
+  const documentText = JSON.stringify(event, null, 2);
+  if (eventURL) URL.revokeObjectURL(eventURL);
+  eventURL = URL.createObjectURL(new Blob([documentText], {type: 'application/json'}));
+  $('download-event').href = eventURL;
+  $('download-event').download = `rhythm-${event.event_id}.input-event.json`;
+  $('event').textContent = documentText;
+  const ready = event.payload.status === 'ready';
+  $('arrangement').hidden = !ready;
+  selectBandInput(ready ? event : null);
+  renderHits();
+  prepareMidi();
+}
+
+function commitEdit(revise, nextSelection, seekToHit = false) {
+  try {
+    const previous = editor.event;
+    const event = revise();
+    if (previous !== event) {
+      selected = nextSelection(event.payload.rhythm.onset_seconds);
+      refreshEvent();
+      if (seekToHit) setPosition(event.payload.rhythm.onset_seconds[selected]);
+      editStatus.textContent = '已更新当前节奏。';
+    } else {
+      editStatus.textContent = '拍点没有改动。';
+    }
+  } catch (error) {
+    editStatus.textContent = error.message;
+  }
+}
+
+function clearResult() {
+  stopPlayback();
+  editor = null;
+  selected = -1;
+  setPosition(0);
+  prepareMidi();
+  selectBandInput(null);
+  if (eventURL) URL.revokeObjectURL(eventURL);
+  eventURL = null;
+  $('download-event').removeAttribute('href');
+  $('event').textContent = '';
+  editStatus.textContent = '';
+  $('result').hidden = $('arrangement').hidden = true;
+}
+
+function clearAudio() {
+  clearResult();
+  buffer = null;
+  sourceWave = null;
+  sessionId = null;
+  original.pause();
+  original.removeAttribute('src');
+  original.load();
+  if (sourceURL) URL.revokeObjectURL(sourceURL);
+  sourceURL = null;
+  $('original-source').hidden = $('download-original').hidden = true;
+  $('download-original').removeAttribute('href');
+}
+
+async function load(blob, token, {microphone = false} = {}) {
+  if (token !== operation) return;
+  if (blob.size > 15 * 1024 * 1024) throw new Error('请使用 15 MB 以内的音频。');
+  const context = new AudioContext();
+  let decoded;
+  try {
+    decoded = await context.decodeAudioData(await blob.arrayBuffer());
+  } finally {
+    await context.close();
+  }
+  if (token !== operation) return;
+  const take = captureWindow(decoded, {microphone});
+  buffer = take.audio;
+  sourceWave = take.capped ? pcmWave(buffer) : null;
+  if (sourceWave) blob = new Blob([sourceWave], {type: 'audio/wav'});
+  sessionId = crypto.randomUUID();
+  sourceURL = URL.createObjectURL(blob);
+  original.src = sourceURL;
+  $('download-original').href = sourceURL;
+  const extension = blob.type.includes('wav') ? 'wav' : blob.type.includes('mp4') ? 'm4a' :
+    blob.type.includes('ogg') ? 'ogg' : 'webm';
+  $('download-original').download = blob instanceof File ? blob.name : `rhythm-original.${extension}`;
+  $('original-source').hidden = $('download-original').hidden = false;
+  $('status').textContent = take.capped ? '已保存录音的前 30 秒，达到录制上限。' :
+    `已载入 ${buffer.duration.toFixed(2)} 秒录音。`;
+}
+
+function reportError(error) {
+  $('status').textContent = error.name === 'NotAllowedError' ? '麦克风权限未开启，可以允许权限或导入录音。' :
+    error.name === 'EncodingError' ? '无法解码这段音频，请使用有效的 WAV、MP3 或 WebM 文件。' : error.message;
+}
+
+async function replaceAudio(getBlob) {
+  if (phase !== 'idle') return;
+  const token = ++operation;
+  setPhase('loading');
+  clearAudio();
+  $('status').textContent = '正在载入音频…';
+  try {
+    await load(await getBlob(), token);
+  } catch (error) {
+    if (token === operation) reportError(error);
+  } finally {
+    if (token === operation) setPhase('idle');
+  }
+}
+
+function releaseMicrophone() {
+  clearTimeout(timer);
+  stream?.getTracks().forEach(track => track.stop());
+  stream = null;
+}
+
+function stopRecording() {
+  if (phase !== 'recording' || recorder?.state !== 'recording') return;
+  setPhase('stopping');
+  recorder.stop();
+}
+
+function wavBase64(data) {
+  const bytes = new Uint8Array(data);
+  let binary = '';
+  for (let i = 0; i < bytes.length; i += 8192) binary += String.fromCharCode(...bytes.subarray(i, i + 8192));
+  return btoa(binary);
+}
+
 $('file').onchange = () => {
   const file = $('file').files[0];
   $('file').value = '';
   if (file) replaceAudio(() => file);
 };
-$('example').onclick=()=>replaceAudio(async()=>{const r=await fetch('rhythm-example.wav');if(!r.ok)throw Error('示例未找到，请先生成示例音频。');return r.blob();});
-$('record').onclick=async()=>{
-  if(phase==='recording'){stopRecording();return;}
-  if(phase!=='idle')return;
-  setPhase('requesting');clearResult();
-  const epoch=captureEpoch;
-  try{
-    if(!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder)throw Error('浏览器无法录音，请在本机 Chrome／Edge 中打开，或导入音频。');
-    const acquired=await navigator.mediaDevices.getUserMedia({audio:true});
-    if(disposed||epoch!==captureEpoch){acquired.getTracks().forEach(t=>t.stop());return;}
-    stream=acquired;
-    const capture=new MediaRecorder(stream),chunks=[];let failed=false;recorder=capture;
-    capture.ondataavailable=e=>{if(e.data.size)chunks.push(e.data);};
-    capture.onerror=()=>{if(recorder!==capture||disposed)return;failed=true;releaseMicrophone();recorder=null;setPhase('idle');$('status').textContent='录音中断，请重新录制或导入。';};
-    capture.onstop=async()=>{
-      if(failed||disposed||recorder!==capture)return;
-      releaseMicrophone();recorder=null;
-      const token=++operation;setPhase('loading');
-      try{await load(new Blob(chunks,{type:capture.mimeType}),token);}catch(e){if(token===operation){clearAudio();reportError(e);}}finally{if(token===operation)setPhase('idle');}
-    };
-    operation++;clearAudio();capture.start();setPhase('recording');timer=setTimeout(stopRecording,20000);
-    $('status').textContent=$('count').value==='0'?'正在录音：按指定 BPM 拍一小节。':'正在录音：四下均匀定速，接着一小节。';
-  }catch(e){if(epoch!==captureEpoch)return;releaseMicrophone();recorder=null;reportError(e);setPhase('idle');}
-};
-for(const id of ['count','tempo','origin'])$(id).onchange=()=>{clearResult();sync();};
-for (const id of ['rhythm-mode', 'rhythm-energy', 'rhythm-bars']) {
-  $(id).onchange = () => selectBandInput(selectedRhythm);
-}
-$('analyze').onclick=async()=>{
-  if(phase!=='idle'||!buffer)return;
-  for(const field of [$('tempo'),$('origin')]){
-    if(!field.disabled&&!field.checkValidity()){
-      field.closest('details').open=true;
-      field.reportValidity();
+$('example').onclick = () => replaceAudio(async () => {
+  const response = await fetch('rhythm-example.wav');
+  if (!response.ok) throw new Error('未找到节奏示例。');
+  return response.blob();
+});
+$('record').onclick = async () => {
+  if (phase === 'recording') {
+    stopRecording();
+    return;
+  }
+  if (phase !== 'idle') return;
+  const token = ++operation;
+  setPhase('requesting');
+  clearResult();
+  original.pause();
+  $('status').textContent = '正在请求麦克风权限…';
+  try {
+    if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder)
+      throw new Error('浏览器无法录音，请在本机 Chrome／Edge 中打开，或导入音频。');
+    const acquired = await navigator.mediaDevices.getUserMedia({audio: {
+      echoCancellation: false, noiseSuppression: false, autoGainControl: false,
+    }});
+    if (disposed || token !== operation) {
+      acquired.getTracks().forEach(track => track.stop());
       return;
     }
+    stream = acquired;
+    const capture = new MediaRecorder(stream);
+    const chunks = [];
+    recorder = capture;
+    capture.ondataavailable = event => { if (event.data.size) chunks.push(event.data); };
+    capture.onerror = () => {
+      if (recorder !== capture) return;
+      recorder = null;
+      releaseMicrophone();
+      setPhase('idle');
+      $('status').textContent = '录音中断，请重新录制或导入。';
+    };
+    capture.onstop = async () => {
+      if (recorder !== capture) return;
+      recorder = null;
+      releaseMicrophone();
+      setPhase('loading');
+      try {
+        await load(new Blob(chunks, {type: capture.mimeType}), token, {microphone: true});
+      } catch (error) {
+        if (token === operation) reportError(error);
+      } finally {
+        if (token === operation) setPhase('idle');
+      }
+    };
+    capture.start();
+    clearAudio();
+    setPhase('recording');
+    timer = setTimeout(stopRecording, MAX_CAPTURE_SECONDS * 1000);
+    $('status').textContent = '正在录音，可以按自己的节奏拍击。';
+  } catch (error) {
+    if (token !== operation) return;
+    recorder = null;
+    releaseMicrophone();
+    reportError(error);
+    setPhase('idle');
   }
-  const token=++operation;setPhase('analyzing');clearResult();$('status').textContent='正在本机分析，首次调用可能需要稍等…';
-  try{const r=await fetch('/api/reference/rhythm/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({wav:wavBase64(buffer),session_id:sessionId,started_at:startedAt,count_in:Number($('count').value),tempo:Number($('tempo').value),origin:$('origin').value===''?null:Number($('origin').value)})});
-    const event=await r.json();if(token!==operation)return;if(!r.ok)throw Error(event.error);const rhythm=event.payload.rhythm;selectedRhythm=event;selectBandInput(event);
-    $('event').textContent=JSON.stringify(event,null,2);$('summary').textContent=`${rhythm.tempo_bpm.toFixed(1)} BPM · 拍点 [${rhythm.onset_beats.join(', ')}] · 网格贴合度 ${rhythm.confidence.toFixed(2)}`;
-    $('result').hidden=false;$('status').textContent='已识别节拍。你可以选择编排方式，再生成音乐。';
-  }catch(e){if(token===operation)$('status').textContent=`分析失败：${e.message}`;}finally{if(token===operation)setPhase('idle');}
 };
-window.addEventListener('pagehide',event=>{disposed=true;captureEpoch++;operation++;cancelMrt2Export();recorder=null;releaseMicrophone();$('original').pause();if(!event.persisted&&sourceURL)URL.revokeObjectURL(sourceURL);setPhase('idle');});
-window.addEventListener('pageshow',()=>{disposed=false;sync();});
+$('analyze').onclick = () => {
+  if (phase !== 'idle' || !buffer) return;
+  setPhase('analyzing');
+  clearResult();
+  original.pause();
+  $('status').textContent = '正在识别录音中的拍点…';
+  return analysis.run(signal => post('rhythm/analyze', {
+    wav: wavBase64(sourceWave ?? pcmWave(buffer)), session_id: sessionId, started_at: null,
+  }, signal),
+    event => {
+      editor = createRhythmEditor(event);
+      const {audio_duration_s: duration, status} = event.payload;
+      seek.max = String(duration);
+      setPosition(0);
+      renderAxis(duration);
+      selected = status === 'ready' ? 0 : -1;
+      refreshEvent();
+      $('result').hidden = false;
+      setPhase('idle');
+      $('status').textContent = status === 'ready' ? '已识别拍点，可以试听或编辑。' :
+        '未识别到拍点。可以根据原录音手动添加，或重新录制。';
+    }, error => {
+      clearResult();
+      setPhase('idle');
+      $('status').textContent = `识别失败：${error.message}`;
+    });
+};
+
+$('hit-select').onchange = event => selectHit(Number(event.target.value), true);
+$('hit-editor').onsubmit = event => {
+  event.preventDefault();
+  if (!editor || selected < 0) return;
+  const time = $('hit-time').valueAsNumber, velocity = $('hit-velocity').valueAsNumber;
+  commitEdit(() => editor.save(selected, time, velocity), times => times.indexOf(time), true);
+};
+$('delete-hit').onclick = () => {
+  if (!editor || selected < 0) return;
+  const index = selected;
+  commitEdit(() => editor.remove(index), times => Math.min(index, times.length - 1));
+};
+$('add-hit').onclick = () => {
+  if (!editor) return;
+  stopPlayback();
+  const time = position;
+  commitEdit(() => editor.save(null, time, 80), times => times.indexOf(time));
+};
+$('undo-hit').onclick = () => {
+  if (editor?.canUndo) commitEdit(() => editor.undo(), times => Math.min(Math.max(0, selected), times.length - 1));
+};
+seek.oninput = () => {
+  const next = seek.valueAsNumber;
+  stopPlayback();
+  setPosition(next);
+};
+$('play-midi').onclick = playMidi;
+$('rhythm-mrt2-midi').onclick = () => saveMidi(downloadMrt2Midi);
+$('rhythm-mrt2-export').onclick = () => saveMidi(downloadMrt2Input);
+$('retry-midi').onclick = prepareMidi;
+for (const id of ['rhythm-mode', 'rhythm-energy']) {
+  $(id).onchange = () => selectBandInput(editor?.event.payload.status === 'ready' ? editor.event : null);
+}
+original.addEventListener('play', stopPlayback);
+bandAudio.addEventListener('play', stopPlayback);
+window.addEventListener('pagehide', event => {
+  disposed = true;
+  operation++;
+  analysis.cancel();
+  midiRequest.cancel();
+  recorder = null;
+  releaseMicrophone();
+  stopPlayback();
+  original.pause();
+  if (!event.persisted) {
+    if (sourceURL) URL.revokeObjectURL(sourceURL);
+    if (eventURL) URL.revokeObjectURL(eventURL);
+    if (playbackContext) void playbackContext.close();
+  } else if (phase !== 'idle') {
+    $('status').textContent = buffer ? '录音仍可重新识别。' : '录音或导入音频后开始识别。';
+  }
+  setPhase('idle');
+});
+window.addEventListener('pageshow', () => {
+  disposed = false;
+  sync();
+  if (!prepared && editor?.event.payload.status === 'ready') prepareMidi();
+});
 sync();

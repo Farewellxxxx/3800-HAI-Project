@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import io
 from pathlib import Path
 
 import pretty_midi
@@ -12,9 +13,9 @@ from jammate.music import Note
 _PROGRAMS = {"bass": 33, "keys": 4, "lead": 80, "user": 52}
 
 
-def to_pretty_midi(notes: tuple[Note, ...], tempo_bpm: float) -> pretty_midi.PrettyMIDI:
+def to_pretty_midi(notes: tuple[Note, ...], tempo_bpm: float, *, resolution: int = 220) -> pretty_midi.PrettyMIDI:
     seconds_per_beat = 60.0 / tempo_bpm
-    pm = pretty_midi.PrettyMIDI(initial_tempo=tempo_bpm)
+    pm = pretty_midi.PrettyMIDI(initial_tempo=tempo_bpm, resolution=resolution)
     tracks: dict[str, pretty_midi.Instrument] = {}
     for note in sorted(notes, key=lambda n: (n.start, n.pitch)):
         track = tracks.get(note.instrument)
@@ -38,3 +39,20 @@ def write_midi(notes: tuple[Note, ...], tempo_bpm: float, path: Path) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     to_pretty_midi(notes, tempo_bpm).write(str(path))
     return path
+
+
+def write_arrangement_midi(notes, tempo_bpm, output, *, resolution, duration_beats):
+    """Write high-resolution free arrangement tracks through the plan's end."""
+    from mido import MidiFile
+
+    encoded = io.BytesIO()
+    to_pretty_midi(notes, tempo_bpm, resolution=resolution).write(encoded)
+    encoded.seek(0)
+    midi = MidiFile(file=encoded)
+    end_tick = round(duration_beats * resolution)
+    for track in midi.tracks:
+        tail = end_tick - sum(message.time for message in track[:-1])
+        if tail < 0:
+            raise ValueError("arrangement MIDI extends past plan end")
+        track[-1].time = tail
+    midi.save(file=output)

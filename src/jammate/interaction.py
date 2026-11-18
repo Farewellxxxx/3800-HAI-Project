@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from enum import Enum
 
 from jammate.music import Note
-from jammate.rhythm import RhythmContext
+from jammate.rhythm import FreeRhythm, RhythmContext
 
 
 class Strategy(str, Enum):
@@ -82,7 +82,7 @@ class Motif:
 @dataclass(frozen=True)
 class RhythmSource:
     event_id: str
-    context: RhythmContext
+    context: RhythmContext | FreeRhythm
 
 
 @dataclass(frozen=True)

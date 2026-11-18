@@ -10,6 +10,7 @@ import re
 import uuid
 
 from jammate.contracts.band_plan import BandPlan
+from jammate.rhythm import FreeRhythm
 from jammate.state import JamState
 from .plans import make_plan
 
@@ -169,11 +170,16 @@ class RuleAgent:
                                    "Echo the latest observed phrase without removing its leading rest")
             if rhythms:
                 event, payload = rhythms[-1], rhythms[-1].payload
-                context = payload["rhythm"]
-                if payload["status"] == "ready" and context["confidence"] >= .65:
+                context = next(r.context for r in state.rhythm_sources if r.event_id == event.event_id)
+                if payload["status"] == "ready" and (isinstance(context, FreeRhythm) or context.confidence >= .65):
                     actions.append(_action("ADJUST_FEEL", rhythm_event_id=event.event_id))
                     strategy = "RESPOND" if strategy != "INITIATE" else strategy
-                    reasons.append("Adopt rhythmic onsets at the existing session tempo")
+                    if isinstance(context, FreeRhythm):
+                        required = context.required_bars(transport.get("tempo_bpm", state.tempo_bpm))
+                        bars = required if len(actions) == 1 else max(bars, required)
+                        reasons.append("Adopt the complete free rhythm on the session timeline")
+                    else:
+                        reasons.append("Adopt rhythmic onsets at the existing session tempo")
                     # Tempo changes require an explicit text/control decision in this baseline.
                 else:
                     reasons.append("Rhythm is empty or below the 0.65 alignment threshold; retain groove")

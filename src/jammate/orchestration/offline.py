@@ -8,7 +8,7 @@ from __future__ import annotations
 import hashlib
 import math
 import random
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 
 import numpy as np
 
@@ -17,7 +17,9 @@ from jammate.generate.arranger import arrange_bar, place_lead
 from jammate.generate.response import answer_motif, initiate_motif
 from jammate.interaction import Motif
 from jammate.music import Note
+from jammate.render.free_rhythm_midi import ENCODING_TEMPO_BPM, TICKS_PER_BEAT, free_rhythm_ticks
 from jammate.render.synth import render, TAIL_S
+from jammate.rhythm import FreeRhythm
 from jammate.state import JamState
 from .manager import StateManager
 from .transitions import project
@@ -31,6 +33,7 @@ class PlannedPerformance:
     tempo_bpm: float
     start_bar: int
     bars: int
+    midi_resolution: int | None = field(default=None, kw_only=True)
 
 
 @dataclass(frozen=True)
@@ -67,6 +70,14 @@ def prepare_plan(state: JamState, plan: BandPlan, *, seed=3800) -> PlannedPerfor
     start, bars = data["effective_at"]["bar"], data["valid_for_bars"]
     if start != state.position.next_bar:
         raise PlanError("offline executor requires the next unrendered bar; cannot skip intervening bars")
+    if target.playing and isinstance(target.rhythm, FreeRhythm):
+        # Reject collisions in the selected phrase even when a mode or layer
+        # setting would omit an anchor from the final arrangement.
+        try:
+            for tempo in {ENCODING_TEMPO_BPM, target.tempo_bpm}:
+                free_rhythm_ticks(target.rhythm.onset_seconds, target.rhythm.audio_duration_s, tempo)
+        except ValueError as error:
+            raise PlanError(str(error)) from error
     lead, generated = (), None
     if target.playing and target.key is None:
         raise PlanError("baseline accompaniment needs an explicitly configured session key")
@@ -98,12 +109,13 @@ def prepare_plan(state: JamState, plan: BandPlan, *, seed=3800) -> PlannedPerfor
                 layer = replace(layer, level=level)
             layers.append(layer)
         bar_state = target.with_updates(layers=tuple(layers))
-        notes = _layers(arrange_bar(bar_state, bar, lead_bars.get(bar, ())), bar_state, bar=bar)
+        notes = _layers(arrange_bar(bar_state, bar, lead_bars.get(bar, ()), end_bar=start + bars), bar_state, bar=bar)
         # A preserved layer must also keep actual notes/velocities, not just metadata.
         # Explicit start/stop governs audibility globally. Compare preserved
         # arrangements under that same transport control, including a restart.
         reference = state.with_updates(playing=target.playing)
-        baseline = _layers(arrange_bar(reference, bar), reference, bar=bar) if reference.playing and reference.key is not None else ()
+        baseline = (_layers(arrange_bar(reference, bar, end_bar=start + bars), reference, bar=bar)
+                    if reference.playing and reference.key is not None else ())
         for preserved in data["preserve"]:
             if preserved.startswith("layer:"):
                 instrument = preserved[6:]
@@ -117,7 +129,8 @@ def prepare_plan(state: JamState, plan: BandPlan, *, seed=3800) -> PlannedPerfor
     if violations:
         raise PlanError("render would change preserved " + ", ".join(sorted(violations)))
     notes = tuple(all_notes)
-    return PlannedPerformance(notes, lead, generated, target.tempo_bpm, start, bars)
+    resolution = TICKS_PER_BEAT if isinstance(target.rhythm, FreeRhythm) else None
+    return PlannedPerformance(notes, lead, generated, target.tempo_bpm, start, bars, midi_resolution=resolution)
 
 
 def render_plan(state: JamState, plan: BandPlan, *, seed=3800, sample_rate=22050) -> RenderedPlan:
@@ -126,7 +139,8 @@ def render_plan(state: JamState, plan: BandPlan, *, seed=3800, sample_rate=22050
     audio = render(local, performance.tempo_bpm, sample_rate,
                    total_s=performance.bars * 4 * 60 / performance.tempo_bpm + TAIL_S)
     return RenderedPlan(performance.notes, performance.lead_notes, performance.generated_motif,
-                        performance.tempo_bpm, performance.start_bar, performance.bars, audio, sample_rate)
+                        performance.tempo_bpm, performance.start_bar, performance.bars, audio, sample_rate,
+                        midi_resolution=performance.midi_resolution)
 
 
 class OfflineRuntime:

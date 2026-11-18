@@ -66,6 +66,43 @@ class RhythmContext:
         return asdict(self)
 
 
+@dataclass(frozen=True)
+class FreeRhythm:
+    """A recording-relative phrase, anchored to a session bar when adopted."""
+
+    onset_seconds: tuple[float, ...]
+    accents: tuple[float, ...]
+    audio_duration_s: float
+    start_bar: int | None = None
+
+    def __post_init__(self) -> None:
+        onsets, accents = tuple(self.onset_seconds), tuple(self.accents)
+        if not math.isfinite(self.audio_duration_s) or not .5 <= self.audio_duration_s <= 30:
+            raise ValueError("free rhythm duration must be within 0.5–30 seconds")
+        if self.start_bar is not None and (type(self.start_bar) is not int or self.start_bar < 0):
+            raise ValueError("free rhythm start_bar must be a nonnegative integer or null")
+        if len(onsets) != len(accents):
+            raise ValueError("free rhythm onset and accent lengths differ")
+        if any(not math.isfinite(time) or not 0 <= time < self.audio_duration_s for time in onsets):
+            raise ValueError("free rhythm onsets must be within the recording")
+        if any(a >= b for a, b in zip(onsets, onsets[1:])):
+            raise ValueError("free rhythm onsets must be strictly increasing")
+        if any(not math.isfinite(accent) or not 0 < accent <= 1 for accent in accents):
+            raise ValueError("free rhythm accents must be within (0, 1]")
+        object.__setattr__(self, "onset_seconds", onsets)
+        object.__setattr__(self, "accents", accents)
+
+    def required_bars(self, tempo_bpm: float) -> int:
+        return math.ceil(self.audio_duration_s * tempo_bpm / (60 * BEATS_PER_BAR))
+
+    def to_dict(self) -> dict[str, object]:
+        return asdict(self)
+
+
+def rhythm_context_from_dict(data: dict) -> RhythmContext | FreeRhythm:
+    return FreeRhythm(**data) if "onset_seconds" in data else RhythmContext(**data)
+
+
 def load_rhythm(path: str | Path) -> RhythmContext:
     """Load the same strict schema used by ``UserRhythm`` events."""
     try:

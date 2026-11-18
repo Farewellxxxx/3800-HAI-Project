@@ -3,6 +3,7 @@ from dataclasses import replace
 
 from jammate.contracts.band_plan import BandPlan, PlanError
 from jammate.interaction import Strategy
+from jammate.rhythm import FreeRhythm
 from jammate.state import JamState
 
 
@@ -36,7 +37,14 @@ def project(state: JamState, plan: BandPlan) -> JamState:
             found = [r.context for r in target.rhythm_sources if r.event_id == params["rhythm_event_id"]]
             if not found:
                 raise PlanError("unknown rhythm reference")
-            target = target.with_updates(rhythm=found[0])
+            rhythm = found[0]
+            if isinstance(rhythm, FreeRhythm):
+                if not rhythm.onset_seconds:
+                    raise PlanError("free rhythm has no selected hits")
+                if rhythm.required_bars(target.tempo_bpm) > data["valid_for_bars"]:
+                    raise PlanError("free rhythm extends past plan lifetime")
+                rhythm = replace(rhythm, start_bar=data["effective_at"]["bar"])
+            target = target.with_updates(rhythm=rhythm)
         if "brightness" in params:
             if name != "ADJUST_FEEL" or scope != "band":
                 raise PlanError("brightness adjustment must target band")

@@ -8,13 +8,13 @@
 
 ### 11 月 2 日网页集成
 
-优化版哼唱导出的乐队输入使用本分支新增的 `schema_version=1.2.0`。它保留完整的 Melody 文档，每个连贯音可以带半开帧区间 `frameRange=[first, stop]`；帧解码独立于 raw 音符，所以有帧证据时 `sourceNoteIds` 可以为空。`status` 与当前选中的版本一致。10 月 31 日的独立校验器不能直接读取 1.2.0。旧哼唱和节奏文件继续用 1.0.0，生命周期输入继续用 1.1.0。用本分支的 `python -m jammate.contracts validate <文件>` 检查三种版本。
+优化版哼唱导出的乐队输入使用本分支新增的 `schema_version=1.2.0`。它保留完整的 Melody 文档，每个连贯音可以带半开帧区间 `frameRange=[first, stop]`；帧解码独立于 raw 音符，所以有帧证据时 `sourceNoteIds` 可以为空。`status` 与当前选中的版本一致。10 月 31 日的独立校验器不能直接读取 1.2.0。旧哼唱和节奏文件继续用 1.0.0，生命周期输入继续用 1.1.0。用本分支的 `python -m jammate.contracts validate <文件>` 检查 InputEvent 文件。
 
 ## 1. 已确定的公共外层
 
 | 字段 | 类型 | 规则 |
 |---|---|---|
-| `schema_version` | string | 接受 `1.0.0` / `1.1.0` / `1.2.0`；1.1 增加 system 生命周期，原三类文件仍可用 1.0 |
+| `schema_version` | string | 接受 `1.0.0` / `1.1.0` / `1.2.0` / `1.3.0`；1.3 用于自由节奏，旧文件可继续使用原版本 |
 | `event_id` | string | 非空；同一次事件的传输重试保留 ID；重新提交/重新识别形成新事件时使用新 ID |
 | `session_id` | string | 非空；由会话创建者提供，不从文件名或系统时间猜测 |
 | `source` | enum | `text`、`speech`、`rhythm`、`humming`；1.1 新增 `system` |
@@ -37,7 +37,8 @@
 对于音频事件，外层起止时间表示**此次分析所对应的完整原始音频片段**在会话中的采集窗口，可包含前导休止、定速拍手和尾部休止。内部音乐内容的时间仍相对该片段，不能把文件的第一个音当作会话零点。
 
 - 哼唱：`sessionNoteStart = started_at + startSec`。
-- 节奏：`sessionOnset = started_at + beat_origin_s + onsetBeat * 60 / tempo_bpm`。
+- 自由节奏 1.3：`sessionOnset = started_at + onsetSeconds`。
+- 网格节奏 1.0–1.2：`sessionOnset = started_at + beat_origin_s + onsetBeat * 60 / tempo_bpm`。
 - 节奏 `tempo_bpm` 是该次分析使用的时间网格；不是要求当前 Jam 无条件切换到这个速度。
 - `ended_at - started_at` 必须等于原片段时长。不要用 ASR/转写完成时间、JSON 的 `createdAt` 或消息到达时间填 ended_at。
 - 从离线文件导入却不知道它属于会话的哪个时刻时，两者填 null。此类事件不能仅凭到达顺序声称与其他输入同步。
@@ -65,6 +66,25 @@ Python 跨字段校验允许 `1e-5 s` 的 JSON 数值舍入误差。这个容差
 完整样例：[speech.json](../examples/input_events/speech.json)。
 
 ### 节奏：`source=rhythm`，`event_type=rhythm_seed`
+
+#### 自由节奏 1.3
+
+```json
+{
+  "status": "ready",
+  "audio_duration_s": 6.5,
+  "rhythm": {"onset_seconds": [0.41, 1.65, 5.19], "accents": [1.0, 0.31, 0.84]},
+  "raw_rhythm": {"onset_seconds": [0.41, 1.68, 5.19], "accents": [1.0, 0.29, 0.84]}
+}
+```
+
+- `rhythm` 是当前选中的拍点。编辑使用新的 `event_id` 并保留 `raw_rhythm`、采集时间和时长。
+- 两组拍点独立校验。秒数相对原录音起点，严格递增，范围为 `[0,audio_duration_s)`。每个拍点对应一个 `(0,1]` 的力度。
+- 当前拍点为空时 `status=no_onsets`。自由节奏的事件置信度为 `null`，没有 BPM、拍号或网格字段。
+- 网页识别接口 `POST /api/reference/rhythm/analyze` 接收 `wav`、`session_id`、`started_at`。`POST /api/reference/rhythm/midi` 输入 `event`，返回纯打击乐 `midi`、`duration_s`、`hits` 和 `encoding_tempo_bpm`。120 BPM 是 MIDI 编码参考，音符 36 的力度是 `max(1, round(accent * 127))`。MIDI 轨到原录音末尾结束。
+- 同一 `event` 可提交至 `POST /api/reference/input/render`。演示编排用 `tempo_source=arrangement_default` 标明 120 BPM 的编排默认值。现有会话使用其当前速度，在 Harness 的 `ADJUST_FEEL` 中把选中节奏放到计划起始小节。含自由节奏的 JamState 使用 `1.1.0`，保留源片段的秒坐标。
+
+#### 单小节网格 1.0–1.2
 
 ```json
 {

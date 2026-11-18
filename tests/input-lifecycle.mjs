@@ -28,15 +28,19 @@ try{
  assert.equal(await page.locator('#original').getAttribute('src'),null,'stale original removed');assert(await page.locator('#result').isHidden());
  await page.locator('#example').click();await page.waitForFunction(()=>!document.getElementById('analyze').disabled);
  await page.locator('#analyze').click();await page.locator('#result').waitFor({state:'visible',timeout:90000});
- await page.locator('summary').filter({hasText:'已有明确速度'}).click();
- assert(await page.locator('#tempo').isDisabled(),'count-in infers its own tempo');
- await page.selectOption('#count','0');
- assert(await page.locator('#result').isHidden(),'changed settings invalidate old event');
- await page.locator('#tempo').fill('0');await page.locator('#analyze').click();
- assert(await page.locator('#tempo').evaluate(e=>e===document.activeElement&&!e.validity.valid));
- await page.locator('#tempo').fill('110');await page.locator('#origin').fill('3');
- await page.locator('#analyze').click();await page.locator('#result').waitFor({state:'visible',timeout:90000});
- assert.match(await page.locator('#summary').innerText(),/110\.0 BPM/);
+ const visibleEvent=async()=>JSON.parse(await page.locator('#event').textContent());
+ const analyzed=await visibleEvent();
+ await page.locator('#hit-time').fill('29');
+ await page.locator('#save-hit').click();
+ assert.match(await page.locator('#edit-status').innerText(),/录音范围/);
+ assert.deepEqual(await visibleEvent(),analyzed,'invalid edits leave the current event untouched');
+ await page.locator('#hit-time').fill('0.5');
+ await page.locator('#save-hit').click();
+ const edited=await visibleEvent();
+ assert.equal(edited.payload.rhythm.onset_seconds[0],0.5);
+ assert.deepEqual(edited.payload.raw_rhythm,analyzed.payload.raw_rhythm);
+ await page.locator('#undo-hit').click();
+ assert.deepEqual((await visibleEvent()).payload,analyzed.payload);
  await page.screenshot({path:path.join(root,'tmp/browser/rhythm.png'),fullPage:true});
  await page.setViewportSize({width:390,height:844});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'rhythm mobile overflow');
  const invalid=await page.request.post(`${base}/api/validate`,{data:{source:'rhythm'}});assert.equal(invalid.status(),400);
@@ -57,6 +61,6 @@ try{
      assert(await page.locator('#download-original').getAttribute('href'), 'completed capture remains downloadable');
    }
  }
- assert.deepEqual(errors,[]);await writeFile(path.join(root,'docs/integration/round-4-browser.json'),JSON.stringify({permissionPendingLocked:true,permissionDenialRecovered:true,mockedRecordingReleasesTrack:true,brokenFileClearsOldAudio:true,settingsInvalidateResult:true,recoveryAnalysisPassed:true,mobileOverflow:false,pageErrors:errors},null,2)+'\n');
+ assert.deepEqual(errors,[]);await writeFile(path.join(root,'docs/integration/round-4-browser.json'),JSON.stringify({permissionPendingLocked:true,permissionDenialRecovered:true,mockedRecordingReleasesTrack:true,brokenFileClearsOldAudio:true,invalidEditRejected:true,editRestoresOnUndo:true,recoveryAnalysisPassed:true,mobileOverflow:false,pageErrors:errors},null,2)+'\n');
  console.log('Lifecycle regression passed; no physical microphone was used.');
 }finally{await browser.close();}

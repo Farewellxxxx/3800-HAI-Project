@@ -9,7 +9,7 @@ import pretty_midi
 import pytest
 import soundfile
 
-from jammate.reference_bridge import REFERENCE_COMMIT, ReferenceBridge
+from jammate.reference_bridge import REFERENCE_COMMIT, ReferenceBridge, ReferenceFailure
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -26,7 +26,9 @@ def midi(result):
 
 
 def test_original_rhythm_analysis_and_generation_use_the_pinned_checkout(bridge):
-    wav = base64.b64encode((ROOT / "web/rhythm-example.wav").read_bytes()).decode("ascii")
+    wav = base64.b64encode((ROOT / "examples/input_mrt2/inputs/rhythm.wav").read_bytes()).decode("ascii")
+    with pytest.raises(ReferenceFailure, match="workspace"):
+        bridge.request("rhythm/analyze", {"wav": wav, "session_id": "test-rhythm", "started_at": 0})
     event = bridge.request("rhythm/analyze", {"wav": wav, "session_id": "test-rhythm",
                            "count_in": 4, "tempo": 100, "origin": None, "started_at": 0})
     rhythm = event["payload"]["rhythm"]

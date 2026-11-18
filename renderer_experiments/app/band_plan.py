@@ -117,7 +117,8 @@ class KevinRuntime:
         # shortening one note with another note-off. Polyphonic different pitches work.
         import mido
         tempo = mido.bpm2tempo(performance.tempo_bpm)
-        tick = lambda beat: round(mido.second2tick((beat - performance.start_bar * 4) * 60 / performance.tempo_bpm, 480, tempo))
+        resolution = performance.midi_resolution or 480
+        tick = lambda beat: round(mido.second2tick((beat - performance.start_bar * 4) * 60 / performance.tempo_bpm, resolution, tempo))
         ends = {}
         for note in sorted(performance.notes, key=lambda n: n.start):
             key = (CHANNELS[note.instrument], note.pitch)
@@ -161,7 +162,8 @@ class KevinRuntime:
             events = midi_events(performance)
             duration = performance.bars * 4 * 60 / performance.tempo_bpm
             write_events(folder / "events.json", events)
-            write_midi(folder / "band.mid", events, performance.tempo_bpm, self.programs, duration_s=duration)
+            write_midi(folder / "band.mid", events, performance.tempo_bpm, self.programs, duration_s=duration,
+                       ticks_per_beat=performance.midi_resolution or 480)
             verification = verify_midi(folder / "band.mid", events, self.programs, duration)
             metadata = self.render_audio(folder, performance)
             audio, sr = sf.read(folder / "band.wav", dtype="float32", always_2d=True)
@@ -199,7 +201,8 @@ class KevinRuntime:
                     receipt["persistence_warnings"].append({"file": name, "error": type(exc).__name__, "errno": exc.errno})
             self.last_receipt = receipt
             return RenderedPlan(performance.notes, performance.lead_notes, performance.generated_motif,
-                                performance.tempo_bpm, performance.start_bar, performance.bars, audio, sr)
+                                performance.tempo_bpm, performance.start_bar, performance.bars, audio, sr,
+                                midi_resolution=performance.midi_resolution)
         except Exception as exc:
             if hasattr(exc, "report"):
                 receipt["capabilities"] = exc.report

@@ -1,5 +1,8 @@
 """Bounded LLM read view; the authoritative state and input stay lossless."""
 import re
+from dataclasses import replace
+
+from jammate.rhythm import FreeRhythm
 
 
 def select_state(events, state, *, motif_limit=12, rhythm_limit=8):
@@ -14,7 +17,8 @@ def select_state(events, state, *, motif_limit=12, rhythm_limit=8):
     motifs.update(m.motif_id for m in state.motifs if mentioned(m.motif_id))
     rhythms.update(r.event_id for r in state.rhythm_sources if mentioned(r.event_id))
     if state.rhythm is not None:
-        match = next((r for r in reversed(state.rhythm_sources) if r.context == state.rhythm), None)
+        context = replace(state.rhythm, start_bar=None) if isinstance(state.rhythm, FreeRhythm) else state.rhythm
+        match = next((r for r in reversed(state.rhythm_sources) if r.context == context), None)
         if match:
             rhythms.add(match.event_id)
 

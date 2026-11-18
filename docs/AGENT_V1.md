@@ -56,8 +56,8 @@ Agent **不直接生成 MIDI 音符，也不直接修改共享状态**。它保�
 
 | 边界 | 实现/可共享定义 |
 |---|---|
-| InputEvent 1.0/1.1 | [输入契约](INPUT_EVENT_V1.md)、[schema](../src/jammate/contracts/input_event.schema.json) |
-| JamState 1.0 | [现有 state.py 的升级](../src/jammate/state.py)、[schema](../src/jammate/contracts/jam_state.schema.json) |
+| InputEvent 1.0–1.3 | [输入契约](INPUT_EVENT_V1.md)、[schema](../src/jammate/contracts/input_event.schema.json) |
+| JamState 1.0/1.1 | [现有 state.py 的升级](../src/jammate/state.py)、[schema](../src/jammate/contracts/jam_state.schema.json) |
 | BandPlan 1.0 | [不可变计划与校验](../src/jammate/contracts/band_plan.py)、[schema](../src/jammate/contracts/band_plan.schema.json) |
 | 状态管理 | [manager.py](../src/jammate/orchestration/manager.py) |
 | 规则决策 | [agent.py](../src/jammate/orchestration/agent.py) |
@@ -111,7 +111,7 @@ Agent **不直接生成 MIDI 音符，也不直接修改共享状态**。它保�
 | ADD_LAYER / REMOVE_LAYER | 指定声部 active 开关 |
 | FILL / guitar / brightness | 预留或未支持，明确拒绝执行，不声称已完成 |
 
-本版全部节奏输入都沿用会话 BPM；输入分析的 tempo_source 和 BPM 保留作证据。改变会话速度需要显式“加速/减速”指令（±8 BPM，限制在 60–180）。节奏 confidence≥0.65 且非空才采用；这个门槛只用于规则防抖，不是识别准确率保证。低分/空输入保留原 groove。
+节奏采用会话 BPM。改变会话速度需要显式“加速/减速”指令（±8 BPM，限制在 60–180）。单小节网格节奏仅在 `confidence≥0.65` 且非空时采用。自由节奏依据当前选中的拍点，采用非空片段时保留秒坐标和采集时长。自由节奏从计划起始小节播放，在后续编排中按整个片段占用的小节数循环。包含自由节奏的 JamState 使用 `1.1.0`，现有的 `1.0.0` 状态仍可读取。
 
 ECHO 的 canonical motif 记录完整；实际演奏仍受 lead 的音量设置影响。若 lead 被关闭或静音，参考端拒绝 motif 响应，避免产生“已经回应”的假回执。
 

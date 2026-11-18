@@ -69,7 +69,14 @@ try{
  for(const kind of ['rhythm','humming']){
    await page.goto(base+(kind==='rhythm'?'/rhythm.html':'/optimized/dist/'));
    await page.click('#example');
-   if(kind==='rhythm')await page.click('#analyze');
+   if(kind==='rhythm'){
+     await page.click('#analyze');
+     await page.locator('#result').waitFor({timeout:120000});
+     await page.locator('#hit-time').fill('0.5');
+     await page.locator('#hit-velocity').fill('43');
+     await page.locator('#save-hit').click();
+     await page.locator('#arrangement > summary').click();
+   }
    else {await page.waitForFunction(()=>!document.querySelector('#convert').disabled);await page.click('#convert');}
    await page.locator('[data-render]').waitFor({state:'visible',timeout:120000});
    if(real){await page.selectOption('[data-backend]','mrt2');await page.check('[data-preview]');}
@@ -84,7 +91,13 @@ try{
      const exported=await page.locator('#download-event').evaluate(async a=>(await fetch(a.href)).json());
      assert.deepEqual(exported,result.input_event);
      assert.deepEqual(result.input_event.payload.melody.notes.map(n=>n.pitchMidi),[60,64,67,64,62]);
-   }else assert.deepEqual(result.input_event.payload.rhythm.onset_beats,[0,1,1.5,3]);
+   }else{
+     const exported=await page.locator('#download-event').evaluate(async a=>(await fetch(a.href)).json());
+     assert.deepEqual(exported,result.input_event);
+     assert.equal(exported.payload.rhythm.onset_seconds[0],.5);
+     assert.equal(exported.payload.rhythm.accents[0],43/127);
+     assert.equal(exported.payload.raw_rhythm.onset_seconds.length,10);
+   }
    await artifact(kind,result);
    await page.selectOption('[data-backend]',real?'default':'mrt2');
    assert.equal(await page.locator('[data-output]').isVisible(),false,'changing backend invalidates prior audio');

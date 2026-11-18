@@ -12,9 +12,10 @@ from dataclasses import replace
 from jammate.contracts import InputEvent
 from jammate.contracts.adapters import to_legacy_phrase
 from jammate.contracts.band_plan import BandPlan, PlanError
+from jammate.contracts.input_event import FREE_RHYTHM_EVENT_VERSION
 from jammate.interaction import Interaction, Motif, RhythmSource, Strategy, TransportPosition
 from jammate.music import Note
-from jammate.rhythm import RhythmContext
+from jammate.rhythm import FreeRhythm, RhythmContext
 from jammate.session_log import SessionLog
 from jammate.state import JamState
 from .transitions import project
@@ -125,7 +126,10 @@ class StateManager:
                         motif = Motif(f"motif_{event.event_id}", "user", (event.event_id,), phrase.notes)
                         state = state.with_updates(motifs=state.motifs + (motif,), last_user_motif=phrase.notes)
                 elif event.event_type == "rhythm_seed":
-                    seed = RhythmSource(event.event_id, RhythmContext(**event.payload["rhythm"]))
+                    payload = event.payload
+                    context = (FreeRhythm(**payload["rhythm"], audio_duration_s=payload["audio_duration_s"])
+                               if event.schema_version == FREE_RHYTHM_EVENT_VERSION else RhythmContext(**payload["rhythm"]))
+                    seed = RhythmSource(event.event_id, context)
                     state = state.with_updates(rhythm_sources=state.rhythm_sources + (seed,))
                 elif event.payload["command"] == "user_activity":
                     active = event.payload["active"]

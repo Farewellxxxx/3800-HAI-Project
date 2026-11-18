@@ -56,6 +56,7 @@ try {
   await page.locator('a[href="rhythm.html"]').click();
   await page.locator('#example').click();
   await page.locator('#analyze').click();
+  await page.locator('#arrangement > summary').click();
   await page.locator('[data-render]').click();
   await page.locator('[data-output]').waitFor({state: 'visible'});
   await page.goto(base);

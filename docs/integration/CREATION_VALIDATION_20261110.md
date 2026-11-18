@@ -5,7 +5,7 @@
 | 入口 | 实际浏览器验证 | 可试听的产物 |
 |---|---|---|
 | 哼唱 | Basic Pitch 识别了五个音 `60, 64, 67, 64, 62`。保存的变奏为 `64, 67, 71, 67, 64`，保留了原句的节奏间距。另测了单个持续音。 | [原录音](../../examples/creation/humming-source.wav) · [作品 WAV](../../examples/creation/humming.wav) · [MIDI](../../examples/creation/humming.mid) |
-| 节拍 | 识别速度约 100.45 BPM。第一个小节从 `[0, 1, 1.5, 3]` 发展为 `[0, 0.25, 1, 1.5, 3]`，保留拍点并加入一个装饰拍。更快的录音使用自己的识别速度。 | [原录音](../../web/rhythm-example.wav) · [作品 WAV](../../examples/creation/rhythm.wav) · [MIDI](../../examples/creation/rhythm.mid) |
+| 节拍 | 识别速度约 100.45 BPM。第一个小节从 `[0, 1, 1.5, 3]` 发展为 `[0, 0.25, 1, 1.5, 3]`，保留拍点并加入一个装饰拍。更快的录音使用自己的识别速度。 | [原录音](../../examples/input_mrt2/inputs/rhythm.wav) · [作品 WAV](../../examples/creation/rhythm.wav) · [MIDI](../../examples/creation/rhythm.mid) |
 | 文字 | 从节拍页切换到空白文字入口。独立输入「来一段，慢一点」和「来一段，快一点」，MIDI 分别为 92 和 108 BPM。有不支持的要求时返回错误，改提示后可再次生成。 | [慢一点 WAV](../../examples/creation/text.wav) · [MIDI](../../examples/creation/text.mid) |
 
 - 两个音频入口通过后，阶段测试为 427 项 Python、30 项 JavaScript、两套前端构建和四组 Edge 浏览器脚本。音频先通过识别、编排和 Kevin / FluidSynth，再由浏览器解码 WAV、读回下载的 MIDI。

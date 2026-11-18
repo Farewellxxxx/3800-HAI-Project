@@ -52,6 +52,16 @@ def analyze(body):
     audio, sr = sf.read(io.BytesIO(base64.b64decode(body["wav"], validate=True)), dtype="float32", always_2d=True)
     if not 8000 <= sr <= 96000 or not .5 <= len(audio) / sr <= 30:
         raise ValueError("请使用 0.5–30 秒、8–96 kHz 的录音。")
+    if "count_in" not in body:
+        # The historical pinned worker keeps its explicit count-in request.
+        if importlib.util.find_spec("jammate.analysis.free_rhythm") is None:
+            raise ValueError("自由节奏需要 --implementation workspace。")
+        from jammate.analysis.free_rhythm import analyze_free_rhythm
+        from jammate.contracts.adapters import from_free_rhythm
+
+        onsets, accents = analyze_free_rhythm(audio, sr)
+        return from_free_rhythm(onsets, accents, session_id=body["session_id"],
+                                audio_duration_s=len(audio) / sr, started_at=body.get("started_at")).to_dict()
     count_in = body["count_in"]
     context = analyze_rhythm_audio(np.mean(audio, axis=1), sr, count_in=count_in,
                                    tempo_hint=body["tempo"], beat_origin_s=body["origin"])
@@ -64,6 +74,8 @@ def rhythm_clip(body):
     event = InputEvent.from_dict(body["event"])
     if event.event_type != "rhythm_seed":
         raise ValueError("节拍入口需要识别后的节拍。")
+    if event.schema_version == "1.3.0":
+        raise ValueError("自由节奏请使用统一输入渲染入口。")
     bars, energy = body["bars"], body["energy"]
     if type(bars) is not int or not 1 <= bars <= 8 or type(energy) is not int or not 0 <= energy <= 3:
         raise ValueError("请选择 1–8 小节和 0–3 级力度。")
@@ -76,9 +88,19 @@ def rhythm_clip(body):
 
 def rhythm_hits_midi(body):
     event = InputEvent.from_dict(body["event"])
-    if event.event_type != "rhythm_seed" or event.payload["status"] != "ready":
+    if event.event_type != "rhythm_seed":
         raise ValueError("请先识别有效的节拍。")
-    context = RhythmContext(**event.payload["rhythm"])
+    payload = event.payload
+    if event.schema_version == "1.3.0":
+        from jammate.render.free_rhythm_midi import ENCODING_TEMPO_BPM, free_rhythm_midi
+
+        duration = payload["audio_duration_s"]
+        midi, hits = free_rhythm_midi(payload["rhythm"], duration)
+        return {"midi": base64.b64encode(midi).decode("ascii"), "hits": hits,
+                "duration_s": duration, "encoding_tempo_bpm": ENCODING_TEMPO_BPM}
+    if payload["status"] != "ready":
+        raise ValueError("请先识别有效的节拍。")
+    context = RhythmContext(**payload["rhythm"])
     beats = context.onset_beats
     ends = (*beats[1:], context.beats_per_bar)
     notes = tuple(

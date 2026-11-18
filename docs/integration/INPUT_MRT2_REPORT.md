@@ -6,6 +6,21 @@
 
 这里的“播放通过”指自动化浏览器的 `play()` 成功、播放器时间前进、音频可解码且非静音。没有进行人耳音质评分或物理扬声器验收。MRT2 输出保留团队的 **preview** 定义：是真实模型生成，但不保证逐音符、节奏、音色和原有声部精确保留，因此不提交虚假的演奏状态。
 
+### 2026-11-16 重启与 Notion 核对
+
+工作台已从现有 `27fcad3` 重新启动到 `http://127.0.0.1:4197/`；三个主页面均 HTTP 200，workspace backend 和 MRT2 安装检查通过。本次没有重新跑完整测试或模型推理，下文测试与耗时仍是 11 月 14 日的证据。当前 WSL 服务未配置文字 LLM 或 FluidSynth，使用本地 RuleAgent；精确对照可用 NumPy。
+
+已通过浏览器读取最新可见的 [产品 SPEC](https://app.notion.com/p/SPEC-403c92b8f6c5802689a9c2af142d7a49) 和 [多模态输入任务](https://app.notion.com/p/InputEvent-403c92b8f6c58059ac46c4375274b583)。Notion connector 对项目返回 404，但已登录网页可以访问；没有修改 Notion 内容或任务状态。
+
+- **已对齐**：perception 只产生 InputEvent；团队 Harness 决策；MIDI/MRT2 条件属于 renderer 内部表示；不虚构未知置信度；保留可追踪样例。
+- **用户模块仍有缺口**：键盘文字不等于真实 speech/ASR；自然 phrase segmentation、BPM range、真实 clap/snap/tapping/口技标注测试与置信度校准尚未完成。当前完整任务应继续为 In progress。
+- **明确暂缓**：Start Jam 一次、自然 verbal priming 和自动 modality routing 按本次约定暂不实现，仍是正式产品要求。
+- **团队联合缺口**：跨入口唯一会话/共享时钟、连续播放/下一小节调度、八类 Golden Scenarios 和音乐体验验收尚未由这次三个独立短片段的测试证明。
+- **契约细节**：`rhythm_seed` 本来就在 SPEC；实际 schema 增加 `source=text` 区分键盘，支持哼唱 1.2，但尚无 SPEC 提到的 `instrument` / `instrument_phrase`。这些需作为版本范围说明，不能宣称所有 modality 已支持。
+- **交接缺口**：本次成果仍是本地分支；正式团队交接还需对应 GitHub branch/PR 和 Notion 实验结论，不能仅靠本地文档标记完成。
+
+人工验收建议先用三路自带示例确认事件，再用自己的短录音检查识别，最后启用 MRT2 preview 判断生成是否与输入有可感知联系。持续单音不应被大量切碎，真重复音不应全部合并；节奏先四拍定速再录一小节；文字先用 RuleAgent 支持的“来一段，慢一点”。下载事件与 trace 应对应同一 event_id，preview receipt 应保持 state_committed=false。主观听感验收与结构/API 验收分别记录。
+
 ## 1. 原来的本地流程
 
 ```mermaid
@@ -128,7 +143,7 @@ flowchart TD
 
 这是同一个支持版本演进的 InputEvent 契约，并非要求三个 payload 长得一样。哼唱必须用已被团队支持的 1.2 版，以保留所选 motif 和原始证据。下载、提交及响应中的事件现已逐字段相等；BandPlan.trigger_event_ids 指向该事件。
 
-与粘贴的产品 SPEC 的差异有明确边界：团队实际 schema 已扩展 `source=text`、`event_type=rhythm_seed`、哼唱 1.2 的 `payload.melody`。本次按已落地契约接入，没有把键盘文字冒称为语音识别。后续 Wyman 若要收紧为另一版字段，需要一起做版本迁移。
+与粘贴的产品 SPEC 的差异有明确边界：团队实际 schema 增加 `source=text`，并将哼唱 1.2 的 `payload.melody` 具体化；`event_type=rhythm_seed` 原本就在 SPEC 中，不是新增扩展。本次按已落地契约接入，没有把键盘文字冒称为语音识别。后续 Wyman 若要收紧为另一版字段，需要一起做版本迁移。
 
 节奏里的 `confidence` 是 **grid_alignment_heuristic**，不等于识别正确率。没有捏造 ASR 概率、BPM 区间或 pitch 精确度。当前节奏契约没有单独携带完整原始 onset 列表、tempo 候选区间；哼唱也仍以一段录音作为一次 phrase，并未声称完成自然多句切分。这些是下一阶段可扩展的感知字段。
 

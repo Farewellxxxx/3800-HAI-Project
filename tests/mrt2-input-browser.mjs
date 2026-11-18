@@ -30,50 +30,53 @@ try {
   await page.locator('#example').click();
   await page.locator('#analyze').click();
   await page.locator('#result').waitFor();
-  const source = page.locator('#rhythm-mrt2-source');
-  const exportButton = page.locator('#rhythm-mrt2-export');
-  await source.selectOption('arrangement');
-  assert(await exportButton.isDisabled(), 'the arrangement requires a rendered clip');
-  await source.selectOption('hits');
+  const before = await download('#rhythm-mrt2-midi');
+  const originalEvent = JSON.parse(await download('#download-event'));
+  await page.locator('#hit-time').fill('0.5');
+  await page.locator('#hit-velocity').fill('43');
+  await page.locator('#save-hit').click();
+  const editedEvent = JSON.parse(await download('#download-event'));
+  assert.notEqual(editedEvent.event_id, originalEvent.event_id);
+  assert.deepEqual(editedEvent.payload.raw_rhythm, originalEvent.payload.raw_rhythm);
+  assert.equal(editedEvent.payload.rhythm.accents[0], 43 / 127);
   const hits = await input('#rhythm-mrt2-export', 'rhythm_hits');
   const hitsBytes = Buffer.from(hits.midi_base64, 'base64');
+  assert.notDeepEqual(hitsBytes, before);
   assert.deepEqual(await download('#rhythm-mrt2-midi'), hitsBytes);
-  const hitsMidi = new Midi(hitsBytes);
-  const tracks = hitsMidi.tracks.filter(track => track.notes.length);
+  assert.equal(hits.duration_s, editedEvent.payload.audio_duration_s);
+  const tracks = new Midi(hitsBytes).tracks.filter(track => track.notes.length);
   assert.equal(tracks.length, 1);
   assert.equal(tracks[0].channel, 9);
-  assert.deepEqual(tracks[0].notes.map(note => note.ticks / hitsMidi.header.ppq), [0, 1, 1.5, 3]);
+  assert.equal(tracks[0].notes.length, editedEvent.payload.rhythm.onset_seconds.length);
+  assert.equal(tracks[0].notes[0].time, .5);
+  assert.equal(Math.round(tracks[0].notes[0].velocity * 127), 43);
+  tracks[0].notes.forEach((note, index) => {
+    assert(Math.abs(note.time - editedEvent.payload.rhythm.onset_seconds[index]) < .00003);
+  });
 
-  await source.selectOption('arrangement');
-  await page.locator('#rhythm-mode').selectOption('follow');
+  await page.locator('#arrangement > summary').click();
   await page.locator('[data-render]').click();
   await page.locator('[data-output]').waitFor();
-  const band = await input('#rhythm-mrt2-export', 'rhythm_arrangement');
-  const bandBytes = Buffer.from(band.midi_base64, 'base64');
-  assert.deepEqual(bandBytes, await download('[data-midi]'));
-  assert.deepEqual(bandBytes, await download('#rhythm-mrt2-midi'));
+  const bandBytes = await download('[data-midi]');
+  assert.deepEqual(await download('#rhythm-mrt2-midi'), hitsBytes);
   assert.equal(new Midi(bandBytes).tracks.filter(track => track.notes.length).length, 3);
   assert.equal((await download('[data-wav]')).subarray(0, 4).toString(), 'RIFF');
-  await page.locator('#rhythm-mode').selectOption('simplify');
-  assert(await exportButton.isDisabled(), 'a change in arrangement settings invalidates the earlier MIDI');
-  await source.selectOption('hits');
-  assert.deepEqual(await download('#rhythm-mrt2-midi'), hitsBytes, 'the hit track is independent of arrangement settings');
-  await source.selectOption('arrangement');
-  await page.locator('[data-render]').click();
-  await page.locator('[data-output]').waitFor();
+  await page.locator('#undo-hit').click();
+  assert(await page.locator('[data-output]').isHidden(), 'undo invalidates generated music');
+  assert.deepEqual(await download('#rhythm-mrt2-midi'), before);
   await page.locator('#file').setInputFiles(path.join(root, 'web/rhythm-example.wav'));
   await page.locator('#result').waitFor({state: 'hidden'});
   await page.locator('#analyze').click();
   await page.locator('#result').waitFor();
-  assert(await exportButton.isDisabled(), 'replacing the recording clears the arrangement');
+  assert(await page.locator('[data-output]').isHidden(), 'replacing the recording clears the arrangement');
 
   await page.goto(base + '/optimized/dist/');
   await page.locator('#model-badge.ready').waitFor({timeout: 90000});
   await page.locator('#example').click();
   await page.locator('#convert').click();
   await page.locator('#result-content').waitFor({timeout: 90000});
-  for (const variant of ['cleaned', 'raw']) {
-    await page.locator('#variant').selectOption(variant);
+  for (const timbre of ['soft', 'bright']) {
+    await page.locator('#timbre').selectOption(timbre);
     const melody = await input('#humming-mrt2-export', 'humming');
     assert.deepEqual(Buffer.from(melody.midi_base64, 'base64'), await download('#download-midi'));
     assert(melody.duration_s > 0);
@@ -92,7 +95,7 @@ try {
   await page.locator('#text-output').waitFor();
   assert.equal((await download('#text-wav')).subarray(0, 4).toString(), 'RIFF');
   assert.deepEqual(errors, []);
-  console.log('MRT2 handoff: rhythm MIDI selection, humming MIDI bytes, raw text, and original generation passed.');
+  console.log('MRT2 handoff: edited rhythm MIDI, humming MIDI bytes, raw text, and generation passed.');
 } finally {
   await browser.close();
 }

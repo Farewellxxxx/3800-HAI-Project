@@ -14,8 +14,11 @@ from jammate.rhythm import RhythmContext, RhythmMode
 
 def rhythmic_hits(context: RhythmContext, mode: RhythmMode,
                   bar_index: int, energy: int) -> tuple[tuple[float, float], ...]:
+    return _shape_hits(list(zip(context.onset_beats, context.accents)), mode, bar_index, energy)
+
+
+def _shape_hits(hits, mode, bar_index, energy, *, free_timing=False):
     mode = RhythmMode(mode)
-    hits = list(zip(context.onset_beats, context.accents))
     if not hits:
         return ()
     if mode is RhythmMode.SIMPLIFY:
@@ -30,7 +33,8 @@ def rhythmic_hits(context: RhythmContext, mode: RhythmMode,
     if mode is RhythmMode.VARY and energy > 0:
         occupied = {b for b, _ in hits}
         candidates = [i * 0.25 for i in range(1, 16)
-                      if all(abs(i * 0.25 - b) >= 0.25 - 1e-9 for b in occupied)]
+                      if (not free_timing or hits[0][0] < i * .25 < hits[-1][0])
+                      and all(abs(i * 0.25 - b) >= 0.25 - 1e-9 for b in occupied)]
         # The last bar of each phrase gets a short fill; other bars rotate
         # their ornament positions deterministically, preserving reproducibility.
         candidates.sort(key=lambda b: (b < 3 if bar_index % 4 == 3 else False, b))
@@ -47,16 +51,26 @@ def rhythm_parts(chord: Chord, context: RhythmContext, mode: RhythmMode,
     if energy <= 0:
         return tuple(Note(p, 0, BEATS_PER_BAR, 45, "keys") for p in chord.voicing(COMP_LOW))
     hits = rhythmic_hits(context, mode, bar_index, energy)
+    return _parts_from_hits(chord, hits, mode, energy, bar_index, len(context.onset_beats))
+
+
+def free_rhythm_parts(chord, hits, mode, energy, bar_index, end_beat):
+    """Arrange a slice of the phrase while retaining its empty bars."""
+    shaped = _shape_hits(list(hits), mode, bar_index, energy, free_timing=True)
+    return _parts_from_hits(chord, shaped, mode, energy, bar_index, len(hits), end_beat=end_beat)
+
+
+def _parts_from_hits(chord, hits, mode, energy, bar_index, anchor_count, *, end_beat=BEATS_PER_BAR):
     if not hits:
         return ()
     root, _, fifth = chord.voicing(BASS_LOW)
     voicing = chord.voicing(COMP_LOW)
     # A full grid leaves no room to insert notes. Change the color of the
     # phrase ending while keeping every existing attack in place.
-    color_ending = mode == RhythmMode.VARY and len(hits) == len(context.onset_beats) and bar_index % 4 == 3
+    color_ending = mode == RhythmMode.VARY and len(hits) == anchor_count and bar_index % 4 == 3
     notes: list[Note] = []
     for i, (beat, accent) in enumerate(hits):
-        next_beat = hits[i + 1][0] if i + 1 < len(hits) else float(BEATS_PER_BAR)
+        next_beat = hits[i + 1][0] if i + 1 < len(hits) else end_beat
         duration = min(next_beat - beat, 0.75)
         velocity = min(127, round((55 + 15 * energy) * (0.45 + 0.55 * accent)))
         drum = KICK if i % 2 == 0 else SNARE

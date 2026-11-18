@@ -8,6 +8,12 @@ try{
   await page.goto(base+'/rhythm.html');await page.click('#example');
   let release,arrived;const held=new Promise(r=>release=r),received=new Promise(r=>arrived=r);
   const analysis = base + '/api/reference/rhythm/analyze';
+  // Let the held response reach the application even after its AbortController fires.
+  await page.evaluate(url => {
+    const original = window.fetch;
+    window.fetch = (input, options) => original(input, input === url || new URL(input, location.href).href === url
+      ? {...options, signal: undefined} : options);
+  }, analysis);
   await page.route(analysis,async route=>{const response=await route.fetch();arrived();await held;await route.fulfill({response});},{times:1});
   await page.click('#analyze');await received;
   await page.evaluate(()=>{dispatchEvent(new PageTransitionEvent('pagehide',{persisted:true}));dispatchEvent(new PageTransitionEvent('pageshow',{persisted:true}));});

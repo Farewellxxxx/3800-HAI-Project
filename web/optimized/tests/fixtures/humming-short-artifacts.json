@@ -1,0 +1,452 @@
+{
+  "description": "Recorded decoder observations from user-provided 12.42 s humming; no audio or ground-truth annotation. Regression for conservative artifact filtering.",
+  "durationSec": 12.42,
+  "notes": [
+    {
+      "id": "h1",
+      "pitchMidi": 46,
+      "startSec": 0.719819,
+      "durationSec": 0.476009,
+      "velocity01": 0.7086614173228346,
+      "modelActivation": 0.3963896425610239,
+      "onsetActivation": 0.3365950584411621,
+      "sourceNoteIds": [
+        "n72",
+        "n71",
+        "n70",
+        "n69",
+        "n68"
+      ],
+      "frameRange": [
+        62,
+        103
+      ]
+    },
+    {
+      "id": "h2",
+      "pitchMidi": 53,
+      "startSec": 1.195828,
+      "durationSec": 0.545669,
+      "velocity01": 0.7086614173228346,
+      "modelActivation": 0.6287209584067265,
+      "onsetActivation": 0.6820042133331299,
+      "sourceNoteIds": [
+        "n69",
+        "n68",
+        "n67",
+        "n66"
+      ],
+      "frameRange": [
+        103,
+        150
+      ]
+    },
+    {
+      "id": "h3",
+      "pitchMidi": 56,
+      "startSec": 1.741497,
+      "durationSec": 0.430853,
+      "velocity01": 0.7086614173228346,
+      "modelActivation": 0.4713138981889456,
+      "onsetActivation": 0.679904580116272,
+      "sourceNoteIds": [
+        "n65",
+        "n64",
+        "n63"
+      ],
+      "frameRange": [
+        150,
+        188
+      ]
+    },
+    {
+      "id": "h4",
+      "pitchMidi": 52,
+      "startSec": 2.17235,
+      "durationSec": 0.17415,
+      "velocity01": 0.7086614173228346,
+      "modelActivation": 0.3868599987030029,
+      "onsetActivation": 0.7354265451431274,
+      "sourceNoteIds": [
+        "n63",
+        "n62"
+      ],
+      "frameRange": [
+        188,
+        203
+      ]
+    },
+    {
+      "id": "h5",
+      "pitchMidi": 53,
+      "startSec": 2.346499,
+      "durationSec": 0.290249,
+      "velocity01": 0.7086614173228346,
+      "modelActivation": 0.29058104065748364,
+      "onsetActivation": 0.4737248420715332,
+      "sourceNoteIds": [
+        "n62",
+        "n61",
+        "n60"
+      ],
+      "frameRange": [
+        203,
+        228
+      ]
+    },
+    {
+      "id": "h6",
+      "pitchMidi": 51,
+      "startSec": 2.636749,
+      "durationSec": 0.16254,
+      "velocity01": 0.7086614173228346,
+      "modelActivation": 0.30830824573834736,
+      "onsetActivation": 0.5772733688354492,
+      "sourceNoteIds": [
+        "n60",
+        "n59",
+        "n58"
+      ],
+      "frameRange": [
+        228,
+        242
+      ]
+    },
+    {
+      "id": "h7",
+      "pitchMidi": 50,
+      "startSec": 2.799288,
+      "durationSec": 0.19737,
+      "velocity01": 0.7086614173228346,
+      "modelActivation": 0.46110281017091537,
+      "onsetActivation": 0.37819215655326843,
+      "sourceNoteIds": [
+        "n58"
+      ],
+      "frameRange": [
+        242,
+        259
+      ]
+    },
+    {
+      "id": "h8",
+      "pitchMidi": 49,
+      "startSec": 3.066318,
+      "durationSec": 0.383129,
+      "velocity01": 0.7086614173228346,
+      "modelActivation": 0.6134707883876913,
+      "onsetActivation": 0.6564107537269592,
+      "sourceNoteIds": [
+        "n57",
+        "n56",
+        "n55"
+      ],
+      "frameRange": [
+        265,
+        298
+      ]
+    },
+    {
+      "id": "h9",
+      "pitchMidi": 51,
+      "startSec": 3.519107,
+      "durationSec": 0.895252,
+      "velocity01": 0.7086614173228346,
+      "modelActivation": 0.5307948988100345,
+      "onsetActivation": 0.8149553537368774,
+      "sourceNoteIds": [
+        "n54",
+        "n53",
+        "n52",
+        "n51",
+        "n50",
+        "n49",
+        "n48"
+      ],
+      "frameRange": [
+        304,
+        382
+      ]
+    },
+    {
+      "id": "h10",
+      "pitchMidi": 53,
+      "startSec": 4.414359,
+      "durationSec": 0.743039,
+      "velocity01": 0.7086614173228346,
+      "modelActivation": 0.6255759576192269,
+      "onsetActivation": 0.5341356992721558,
+      "sourceNoteIds": [
+        "n48",
+        "n47",
+        "n46",
+        "n45",
+        "n44"
+      ],
+      "frameRange": [
+        382,
+        446
+      ]
+    },
+    {
+      "id": "h11",
+      "pitchMidi": 52,
+      "startSec": 5.157398,
+      "durationSec": 0.383129,
+      "velocity01": 0.7086614173228346,
+      "modelActivation": 0.3820015886688934,
+      "onsetActivation": 0.5869948863983154,
+      "sourceNoteIds": [
+        "n44",
+        "n43",
+        "n42"
+      ],
+      "frameRange": [
+        446,
+        479
+      ]
+    },
+    {
+      "id": "h12",
+      "pitchMidi": 49,
+      "startSec": 5.540527,
+      "durationSec": 0.406349,
+      "velocity01": 0.7086614173228346,
+      "modelActivation": 0.3428320851590898,
+      "onsetActivation": 0.6314889788627625,
+      "sourceNoteIds": [
+        "n73",
+        "n41",
+        "n40"
+      ],
+      "frameRange": [
+        479,
+        514
+      ]
+    },
+    {
+      "id": "h13",
+      "pitchMidi": 46,
+      "startSec": 5.946876,
+      "durationSec": 0.639833,
+      "velocity01": 0.7086614173228346,
+      "modelActivation": 0.5456042392386331,
+      "onsetActivation": 0.42721691727638245,
+      "sourceNoteIds": [
+        "n39",
+        "n38",
+        "n37"
+      ],
+      "frameRange": [
+        514,
+        570
+      ]
+    },
+    {
+      "id": "h14",
+      "pitchMidi": 43,
+      "startSec": 6.609929,
+      "durationSec": 0.12771,
+      "velocity01": 0.7086614173228346,
+      "modelActivation": 0.15749658915129575,
+      "onsetActivation": 0.22002729773521423,
+      "sourceNoteIds": [],
+      "frameRange": [
+        572,
+        583
+      ]
+    },
+    {
+      "id": "h15",
+      "pitchMidi": 45,
+      "startSec": 6.795688,
+      "durationSec": 0.406349,
+      "velocity01": 0.7086614173228346,
+      "modelActivation": 0.38579880018183527,
+      "onsetActivation": 0.3609399199485779,
+      "sourceNoteIds": [
+        "n36",
+        "n35",
+        "n34"
+      ],
+      "frameRange": [
+        588,
+        623
+      ]
+    },
+    {
+      "id": "h16",
+      "pitchMidi": 47,
+      "startSec": 7.202038,
+      "durationSec": 0.383129,
+      "velocity01": 0.7086614173228346,
+      "modelActivation": 0.28478915379805997,
+      "onsetActivation": 0.4050291180610657,
+      "sourceNoteIds": [
+        "n33",
+        "n32"
+      ],
+      "frameRange": [
+        623,
+        656
+      ]
+    },
+    {
+      "id": "h17",
+      "pitchMidi": 50,
+      "startSec": 7.654827,
+      "durationSec": 0.523733,
+      "velocity01": 0.7086614173228346,
+      "modelActivation": 0.26067160095634134,
+      "onsetActivation": 0.5717579126358032,
+      "sourceNoteIds": [
+        "n31",
+        "n30",
+        "n29"
+      ],
+      "frameRange": [
+        662,
+        708
+      ]
+    },
+    {
+      "id": "h18",
+      "pitchMidi": 54,
+      "startSec": 8.17856,
+      "durationSec": 0.19737,
+      "velocity01": 0.7086614173228346,
+      "modelActivation": 0.2056526487900151,
+      "onsetActivation": 0.5321371555328369,
+      "sourceNoteIds": [
+        "n29",
+        "n28",
+        "n27"
+      ],
+      "frameRange": [
+        708,
+        725
+      ]
+    },
+    {
+      "id": "h19",
+      "pitchMidi": 52,
+      "startSec": 8.375929,
+      "durationSec": 0.638549,
+      "velocity01": 0.7086614173228346,
+      "modelActivation": 0.3772895030145134,
+      "onsetActivation": 0.2932684123516083,
+      "sourceNoteIds": [
+        "n27",
+        "n26",
+        "n25",
+        "n24",
+        "n23"
+      ],
+      "frameRange": [
+        725,
+        780
+      ]
+    },
+    {
+      "id": "h20",
+      "pitchMidi": 50,
+      "startSec": 9.014478,
+      "durationSec": 0.15093,
+      "velocity01": 0.7086614173228346,
+      "modelActivation": 0.13433695957064629,
+      "onsetActivation": 0.6057756543159485,
+      "sourceNoteIds": [
+        "n23",
+        "n22",
+        "n21"
+      ],
+      "frameRange": [
+        780,
+        793
+      ]
+    },
+    {
+      "id": "h21",
+      "pitchMidi": 46,
+      "startSec": 9.165408,
+      "durationSec": 0.557279,
+      "velocity01": 0.7086614173228346,
+      "modelActivation": 0.4256122635828482,
+      "onsetActivation": 0.4585953950881958,
+      "sourceNoteIds": [
+        "n21",
+        "n20",
+        "n19",
+        "n18"
+      ],
+      "frameRange": [
+        793,
+        841
+      ]
+    },
+    {
+      "id": "h22",
+      "pitchMidi": 45,
+      "startSec": 10.03744,
+      "durationSec": 0.417959,
+      "velocity01": 0.7086614173228346,
+      "modelActivation": 0.3890801517141832,
+      "onsetActivation": 0.6413018703460693,
+      "sourceNoteIds": [
+        "n17",
+        "n16",
+        "n15",
+        "n14",
+        "n13"
+      ],
+      "frameRange": [
+        869,
+        905
+      ]
+    },
+    {
+      "id": "h23",
+      "pitchMidi": 47,
+      "startSec": 10.455399,
+      "durationSec": 0.464399,
+      "velocity01": 0.7086614173228346,
+      "modelActivation": 0.24348175071361589,
+      "onsetActivation": 0.6149080395698547,
+      "sourceNoteIds": [
+        "n13",
+        "n12",
+        "n11"
+      ],
+      "frameRange": [
+        905,
+        945
+      ]
+    },
+    {
+      "id": "h24",
+      "pitchMidi": 50,
+      "startSec": 10.919798,
+      "durationSec": 1.417701,
+      "velocity01": 0.7086614173228346,
+      "modelActivation": 0.6544977572879621,
+      "onsetActivation": 0.28816619515419006,
+      "sourceNoteIds": [
+        "n11",
+        "n10",
+        "n9",
+        "n8",
+        "n7",
+        "n6",
+        "n5",
+        "n4",
+        "n3",
+        "n2",
+        "n1"
+      ],
+      "frameRange": [
+        945,
+        1068
+      ]
+    }
+  ]
+}

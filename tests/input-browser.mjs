@@ -14,8 +14,10 @@ const base=process.env.INPUT_LAB_URL||'http://127.0.0.1:4188';const report={vers
 async function download(id,destination){const next=page.waitForEvent('download');await page.locator(id).click();await(await next).saveAs(destination);return readFile(destination);}
 async function checkBand(kind, sample = kind) {
   const output = path.join(root, 'tmp/browser', sample);
-  const event = JSON.parse(await download('[data-event]', output + '.agent.json'));
   const rhythm = kind === 'rhythm';
+  if (rhythm && !(await page.locator('#arrangement').evaluate(section => section.open)))
+    await page.locator('#arrangement > summary').click();
+  const event = JSON.parse(await download(rhythm ? '#download-event' : '[data-event]', output + '.agent.json'));
   const mode = rhythm ? await page.locator('#rhythm-mode').inputValue() : null;
   const received = page.waitForResponse(r => r.url() === base + '/api/reference/input/render');
   await page.locator('[data-render]').click();
@@ -29,6 +31,9 @@ async function checkBand(kind, sample = kind) {
     assert.equal(result.mode, mode);
     assert.equal(result.implementation, 'workspace');
     assert.equal(result.reference_commit, null);
+    assert.equal(result.tempo_source, 'arrangement_default');
+    assert.deepEqual(result.input_event, event);
+    assert.equal(result.bars, Math.ceil(event.payload.audio_duration_s / 2));
   } else {
     assert.equal(result.plan.strategy, 'RESPOND');
     assert.deepEqual(result.plan.trigger_event_ids,[event.event_id]);
@@ -61,17 +66,16 @@ async function checkBand(kind, sample = kind) {
     }
   } else {
     const bass = midi.tracks.find(t => t.channel === 2 || t.name === 'bass');
-    const firstBar = bass.notes.filter(n => n.ticks < midi.header.ppq * 4);
-    const hits = firstBar.map(n=>n.ticks/midi.header.ppq);
-    const anchors = event.payload.rhythm.onset_beats;
+    const hits = bass.notes.map(n => n.time);
+    const anchors = event.payload.rhythm.onset_seconds;
+    const includesTime = (times, target) => times.some(time => Math.abs(time - target) < .00003);
     if (mode === 'simplify') {
-      assert(hits.every(beat => anchors.includes(beat)) && hits.length < anchors.length);
+      assert(hits.every(time => includesTime(anchors, time)) && hits.length < anchors.length);
     } else {
-      assert(anchors.every(beat => hits.includes(beat)), 'input anchors survive');
-      if (mode === 'follow') assert.deepEqual(hits, anchors);
+      assert(anchors.every(time => includesTime(hits, time)), 'input anchors survive across the complete take');
+      if (mode === 'follow') assert.equal(hits.length, anchors.length, 'follow does not repeat the take');
       else assert(hits.length > anchors.length, 'the arrangement adds rhythmic detail');
     }
-    assert(Math.abs(result.tempo_bpm-event.payload.rhythm.tempo_bpm)<.001);
   }
   const {wav:unusedWav, midi:unusedMidi, ...summary} = result;
   await writeFile(output + '.plan.json', JSON.stringify(result.plan ?? summary,null,2));
@@ -115,12 +119,11 @@ try{
       await page.selectOption('#timbre','bright');
       assert(await page.locator('[data-wav]').isVisible());
       assert.equal(await page.locator('[data-wav]').getAttribute('href'), bandWav);
-      await page.selectOption('#variant','raw');
-      assert(await page.locator('[data-output]').isHidden(), 'changing the notes invalidates the old band');
-      await page.selectOption('#variant','cleaned');
+      assert.equal(await page.locator('#variant').count(),0,'optimized humming has one automatic result');
       assert.deepEqual(doc.notes.map(n=>n.pitchMidi),[60,64,67,64,62],'recover all five expected pitches');
       assert.equal(doc.model.executionBackend,'cpu');
       await page.locator('#convert').click();await page.locator('#result-content').waitFor({state:'visible',timeout:90000});
+      assert(await page.locator('[data-output]').isHidden(), 'reanalysis invalidates the old band');
       const repeated=JSON.parse(await download('#download-json',path.join(root,'tmp/browser/repeated.melody.json')));
       assert.deepEqual(repeated.notes,doc.notes,'repeat conversion is deterministic');
       assert.equal(repeated.source.sessionId,event.session_id,'reprocessing retains clip session');
@@ -141,8 +144,12 @@ try{
   assert(await page.locator('[data-output]').isHidden(),'switching from humming starts with no result');
   await page.locator('#example').click();await page.waitForFunction(()=>!document.querySelector('#analyze').disabled);
   await page.locator('#analyze').click();await page.locator('#result').waitFor({state:'visible',timeout:90000});
-  const event=JSON.parse(await download('[data-event]',path.join(root,'tmp/browser/rhythm.event.json')));
-  assert.equal(event.event_type,'rhythm_seed');assert.deepEqual(event.payload.rhythm.onset_beats,[0,1,1.5,3]);
+  const event=JSON.parse(await download('#download-event',path.join(root,'tmp/browser/rhythm.event.json')));
+  assert.equal(event.schema_version,'1.3.0');
+  assert.equal(event.event_type,'rhythm_seed');
+  assert.equal(event.payload.rhythm.onset_seconds.length,10);
+  assert.deepEqual(event.payload.rhythm,event.payload.raw_rhythm);
+  await page.locator('#arrangement > summary').click();
   await page.route('**/api/reference/input/render', route => route.fulfill({
     status:503, contentType:'application/json', body:JSON.stringify({error:'测试：渲染暂不可用'})
   }), {times:1});
@@ -150,16 +157,20 @@ try{
   await page.waitForFunction(()=>document.querySelector('[data-status]').textContent.includes('渲染暂不可用'));
   assert(await page.locator('[data-render]').isEnabled(), 'failed renders can be retried');
   report.rhythmBand = await checkBand('rhythm');
-  await page.selectOption('#rhythm-mode', 'follow');
-  report.rhythmFollow = await checkBand('rhythm', 'rhythm-follow');
+  assert(await page.locator('[data-output]').isVisible());
+  await page.locator('#hit-time').fill('0.5');
+  await page.locator('#hit-velocity').fill('41');
+  await page.locator('#save-hit').click();
+  assert(await page.locator('[data-output]').isHidden(), 'committing an edit clears old generation');
+  report.rhythmEdited = await checkBand('rhythm', 'rhythm-edited');
   await page.selectOption('#rhythm-mode', 'simplify');
   report.rhythmSimplify = await checkBand('rhythm', 'rhythm-simplify');
   await page.selectOption('#rhythm-mode', 'vary');
   await page.locator('#example').click();await page.waitForFunction(()=>!document.querySelector('#analyze').disabled);
   await page.locator('#analyze').click();await page.locator('#result').waitFor({state:'visible',timeout:90000});
-  const nextEvent=JSON.parse(await download('[data-event]',path.join(root,'tmp/browser/rhythm-next.event.json')));
+  const nextEvent=JSON.parse(await download('#download-event',path.join(root,'tmp/browser/rhythm-next.event.json')));
   assert.notEqual(nextEvent.session_id,event.session_id,'independent clips use distinct sessions');
-  // A faster uploaded WAV must set the new session's tempo from its own count-in.
+  // A faster upload preserves its decoded seconds rather than inferring a tempo.
   const faster = await readFile(path.join(root, 'web/rhythm-example.wav'));
   const hz = Math.round(faster.readUInt32LE(24) * 1.2);
   faster.writeUInt32LE(hz, 24);
@@ -169,10 +180,11 @@ try{
   assert.equal(await page.locator('#download-original').getAttribute('download'),'faster.wav');
   assert(await page.locator('[data-output]').isHidden());
   await page.locator('#analyze').click();
-  await page.locator('#band-panel').waitFor({state:'visible',timeout:90000});
+  await page.locator('#result').waitFor({state:'visible',timeout:90000});
   report.uploadedRhythm = await checkBand('rhythm', 'uploaded-rhythm');
-  assert(Math.abs(report.uploadedRhythm.tempo - 120) < 3);
-  report.rhythm={bpm:event.payload.rhythm.tempo_bpm,onsets:event.payload.rhythm.onset_beats};
+  const uploadedRhythm = JSON.parse(await readFile(path.join(root,'tmp/browser/uploaded-rhythm.agent.json')));
+  assert(Math.abs(uploadedRhythm.payload.audio_duration_s - event.payload.audio_duration_s / 1.2) < .001);
+  report.rhythm={duration:event.payload.audio_duration_s,onsets:event.payload.rhythm.onset_seconds};
   report.rhythm.independentClipSessions=true;
   await page.goto(`${base}/appendix.html`);assert.equal(await page.locator('#scores tr').count(),5);
   assert.equal(await page.locator('#rolls svg').count(),3);await page.locator('#case').selectOption('short');

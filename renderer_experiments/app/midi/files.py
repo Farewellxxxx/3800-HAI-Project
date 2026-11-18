@@ -7,7 +7,7 @@ from .events import MidiEvent
 
 
 def write_midi(path: Path, events: list[MidiEvent], bpm: float, programs: dict[int, int] | None = None,
-               *, duration_s: float | None = None) -> None:
+               *, duration_s: float | None = None, ticks_per_beat: int = 480) -> None:
     """Write absolute ticks, retaining trailing rests and explicit note cleanup.
 
     Rounding each delta independently accumulates drift for unquantized humming.
@@ -29,7 +29,7 @@ def write_midi(path: Path, events: list[MidiEvent], bpm: float, programs: dict[i
             raise ValueError("event timestamp must be finite and nonnegative")
         # Adjacent decimal-rounded source notes can differ by a microsecond.
         # At one MIDI tick, release the old voice before starting the next one.
-        return round(mido.second2tick(event.timestamp, 480, tempo)), event.type == "note_on"
+        return round(mido.second2tick(event.timestamp, ticks_per_beat, tempo)), event.type == "note_on"
 
     previous = 0
     for event in sorted(events, key=order):
@@ -46,9 +46,9 @@ def write_midi(path: Path, events: list[MidiEvent], bpm: float, programs: dict[i
         else:
             raise ValueError(f"unsupported MIDI event: {event.type}")
         previous = tick
-    end = previous if duration_s is None else round(mido.second2tick(duration_s, 480, tempo))
+    end = previous if duration_s is None else round(mido.second2tick(duration_s, ticks_per_beat, tempo))
     track.append(mido.MetaMessage("end_of_track", time=end - previous))
-    mid = mido.MidiFile(type=0, ticks_per_beat=480); mid.tracks.append(track)
+    mid = mido.MidiFile(type=0, ticks_per_beat=ticks_per_beat); mid.tracks.append(track)
     path.parent.mkdir(parents=True, exist_ok=True); mid.save(path)
 
 

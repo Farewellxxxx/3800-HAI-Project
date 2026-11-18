@@ -18,7 +18,10 @@
   ],
   "properties": {
     "schema_version": {
-      "const": "1.0.0"
+      "enum": [
+        "1.0.0",
+        "1.1.0"
+      ]
     },
     "session_id": {
       "type": "string",
@@ -431,52 +434,7 @@
           "type": "null"
         },
         {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "tempo_bpm",
-            "onset_beats",
-            "accents",
-            "beat_origin_s",
-            "beats_per_bar",
-            "confidence"
-          ],
-          "properties": {
-            "tempo_bpm": {
-              "type": "number",
-              "minimum": 60,
-              "maximum": 180
-            },
-            "onset_beats": {
-              "type": "array",
-              "maxItems": 16,
-              "uniqueItems": true,
-              "items": {
-                "type": "number",
-                "minimum": 0,
-                "exclusiveMaximum": 4
-              }
-            },
-            "accents": {
-              "type": "array",
-              "maxItems": 16,
-              "items": {
-                "type": "number",
-                "exclusiveMinimum": 0,
-                "maximum": 1
-              }
-            },
-            "beat_origin_s": {
-              "type": "number",
-              "minimum": 0
-            },
-            "beats_per_bar": {
-              "const": 4
-            },
-            "confidence": {
-              "$ref": "#/$defs/unit"
-            }
-          }
+          "$ref": "#/$defs/rhythmContext"
         }
       ]
     },
@@ -502,64 +460,143 @@
             "minLength": 1
           },
           "context": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "tempo_bpm",
-              "onset_beats",
-              "accents",
-              "beat_origin_s",
-              "beats_per_bar",
-              "confidence"
-            ],
-            "properties": {
-              "tempo_bpm": {
-                "type": "number",
-                "minimum": 60,
-                "maximum": 180
-              },
-              "onset_beats": {
-                "type": "array",
-                "maxItems": 16,
-                "uniqueItems": true,
-                "items": {
-                  "type": "number",
-                  "minimum": 0,
-                  "exclusiveMaximum": 4
-                }
-              },
-              "accents": {
-                "type": "array",
-                "maxItems": 16,
-                "items": {
-                  "type": "number",
-                  "exclusiveMinimum": 0,
-                  "maximum": 1
-                }
-              },
-              "beat_origin_s": {
-                "type": "number",
-                "minimum": 0
-              },
-              "beats_per_bar": {
-                "const": 4
-              },
-              "confidence": {
-                "$ref": "#/$defs/unit"
-              }
-            }
+            "$ref": "#/$defs/rhythmContext"
           }
         }
       }
     }
   },
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "JamMate JamState 1.0.0",
+  "title": "JamMate JamState 1.0.0 / 1.1.0",
   "$defs": {
     "unit": {
       "type": "number",
       "minimum": 0,
       "maximum": 1
+    },
+    "legacyRhythm": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tempo_bpm",
+        "onset_beats",
+        "accents",
+        "beat_origin_s",
+        "beats_per_bar",
+        "confidence"
+      ],
+      "properties": {
+        "tempo_bpm": {
+          "type": "number",
+          "minimum": 60,
+          "maximum": 180
+        },
+        "onset_beats": {
+          "type": "array",
+          "maxItems": 16,
+          "uniqueItems": true,
+          "items": {
+            "type": "number",
+            "minimum": 0,
+            "exclusiveMaximum": 4
+          }
+        },
+        "accents": {
+          "type": "array",
+          "maxItems": 16,
+          "items": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 1
+          }
+        },
+        "beat_origin_s": {
+          "type": "number",
+          "minimum": 0
+        },
+        "beats_per_bar": {
+          "const": 4
+        },
+        "confidence": {
+          "$ref": "#/$defs/unit"
+        }
+      }
+    },
+    "rhythmContext": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/legacyRhythm"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "onset_seconds",
+            "accents",
+            "audio_duration_s",
+            "start_bar"
+          ],
+          "properties": {
+            "onset_seconds": {
+              "type": "array",
+              "items": {
+                "type": "number",
+                "minimum": 0
+              }
+            },
+            "accents": {
+              "type": "array",
+              "items": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "maximum": 1
+              }
+            },
+            "audio_duration_s": {
+              "type": "number",
+              "minimum": 0.5,
+              "maximum": 30
+            },
+            "start_bar": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            }
+          }
+        }
+      ]
+    }
+  },
+  "if": {
+    "properties": {
+      "schema_version": {
+        "const": "1.0.0"
+      }
+    }
+  },
+  "then": {
+    "properties": {
+      "rhythm": {
+        "anyOf": [
+          {
+            "type": "null"
+          },
+          {
+            "$ref": "#/$defs/legacyRhythm"
+          }
+        ]
+      },
+      "rhythm_sources": {
+        "items": {
+          "properties": {
+            "context": {
+              "$ref": "#/$defs/legacyRhythm"
+            }
+          }
+        }
+      }
     }
   }
 }

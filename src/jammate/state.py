@@ -8,7 +8,7 @@ import json
 from enum import Enum
 
 from jammate.music import Key, Note
-from jammate.rhythm import RhythmContext, RhythmMode
+from jammate.rhythm import FreeRhythm, RhythmContext, RhythmMode, rhythm_context_from_dict
 from jammate.interaction import Interaction, Layer, Motif, RhythmSource, TransportPosition, unit
 
 MIN_TEMPO_BPM = 60.0
@@ -36,7 +36,7 @@ class JamState:
     last_user_motif: tuple[Note, ...] = ()
     last_ai_motif: tuple[Note, ...] = ()
     playing: bool = True
-    rhythm: RhythmContext | None = None
+    rhythm: RhythmContext | FreeRhythm | None = None
     rhythm_mode: RhythmMode = RhythmMode.FOLLOW
     session_id: str = "default"
     state_version: int = 0
@@ -97,8 +97,11 @@ class JamState:
 
     def to_dict(self) -> dict:
         """SPEC wire view of the same state, not a second writable state."""
+        has_free_rhythm = isinstance(self.rhythm, FreeRhythm) or any(
+            isinstance(source.context, FreeRhythm) for source in self.rhythm_sources)
         data = {
-            "schema_version": "1.0.0", "session_id": self.session_id, "state_version": self.state_version,
+            "schema_version": "1.1.0" if has_free_rhythm else "1.0.0",
+            "session_id": self.session_id, "state_version": self.state_version,
             "transport": {**asdict(self.position), "tempo_bpm": self.tempo_bpm, "playing": self.playing},
             "harmony": {"key": asdict(self.key) if self.key else None, "progression_variant": self.progression_variant},
             "form": {"section": self.section, "bars_elapsed": self.section_bars},
@@ -127,6 +130,6 @@ class JamState:
             last_user_motif=tuple(Note(**n) for n in motifs["last_user"]), last_ai_motif=tuple(Note(**n) for n in motifs["last_ai"]),
             motifs=tuple(Motif(m["motif_id"], m["owner"], tuple(m["source_event_ids"]), tuple(Note(**n) for n in m["notes"])) for m in motifs["items"]),
             current_motif_id=motifs["current_id"], layers=tuple(Layer(**layer) for layer in data["arrangement"]["layers"]),
-            interaction=Interaction(**data["interaction"]), rhythm=RhythmContext(**data["rhythm"]) if data["rhythm"] else None,
-            rhythm_mode=data["rhythm_mode"], rhythm_sources=tuple(RhythmSource(r["event_id"], RhythmContext(**r["context"])) for r in data["rhythm_sources"]),
+            interaction=Interaction(**data["interaction"]), rhythm=rhythm_context_from_dict(data["rhythm"]) if data["rhythm"] else None,
+            rhythm_mode=data["rhythm_mode"], rhythm_sources=tuple(RhythmSource(r["event_id"], rhythm_context_from_dict(r["context"])) for r in data["rhythm_sources"]),
         )
