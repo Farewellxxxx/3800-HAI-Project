@@ -77,6 +77,7 @@ try {
   await page.locator('#result-content').waitFor({timeout: 90000});
   for (const timbre of ['soft', 'bright']) {
     await page.locator('#timbre').selectOption(timbre);
+    await page.locator('#confirm-melody').click();
     const melody = await input('#humming-mrt2-export', 'humming');
     assert.deepEqual(Buffer.from(melody.midi_base64, 'base64'), await download('#download-midi'));
     assert(melody.duration_s > 0);

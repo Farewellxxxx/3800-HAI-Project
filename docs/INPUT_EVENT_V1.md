@@ -14,7 +14,7 @@
 
 | 字段 | 类型 | 规则 |
 |---|---|---|
-| `schema_version` | string | 接受 `1.0.0` / `1.1.0` / `1.2.0` / `1.3.0`；1.3 用于自由节奏，旧文件可继续使用原版本 |
+| `schema_version` | string | 接受 `1.0.0` 至 `1.4.0`。1.3 用于自由节奏，1.4 用于手动编辑后确认的哼唱 |
 | `event_id` | string | 非空；同一次事件的传输重试保留 ID；重新提交/重新识别形成新事件时使用新 ID |
 | `session_id` | string | 非空；由会话创建者提供，不从文件名或系统时间猜测 |
 | `source` | enum | `text`、`speech`、`rhythm`、`humming`；1.1 新增 `system` |
@@ -113,6 +113,8 @@ Python 跨字段校验允许 `1e-5 s` 的 JSON 数值舍入误差。这个容差
 完整样例：[rhythm.json](../examples/input_events/rhythm.json)。
 
 ### 哼唱：`source=humming`，`event_type=musical_phrase`
+
+哼唱工作台在「确认旋律」时发布当前音轨。直接确认自动结果时使用 1.2.0。编辑后的 1.4.0 事件选用 `cleaned`，并带有 `results.cleaned.userEdited=true`。手动添加或修改的音符带有 `manual=true`，其力度来自编辑器。新加的音允许 `sourceNoteIds=[]`，不带模型帧区间。原始识别保存在 `results.raw`。删除所有音后确认会得到 `status=no_notes` 和空音轨。
 
 最终采用 `payload.melody = 原 Melody v1 JSON` 的包装方式，保留整个上游文档；没有把之前讨论中的 notes/tempo 再拷贝成另一份扁平字段。这避免丢失 raw/cleaned、模型信息、质量警告、处理参数和音符来源。
 
